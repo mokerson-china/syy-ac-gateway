@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 5 minute refresh logconfig -->
+<configuration scan="true" scanPeriod="300000">
+	<appender name="DefaultAppender"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>/root/mqtt-agent-ar502/logs/mqttagent.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>/root/mqtt-agent-ar502/logs/mqttagent.%i.log</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>5</maxIndex>
+		</rollingPolicy>
+		<triggeringPolicy
+			class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>5MB</maxFileSize>
+		</triggeringPolicy>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %p [%t] %C{0} %M - %m%n</pattern>
+			<charset class="java.nio.charset.Charset">UTF-8</charset>
+		</encoder>
+	</appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] [%-5p] [%c.%M %L] %m%n</pattern>
+            <charset class="java.nio.charset.Charset">UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root>
+        <level value="INFO" />
+
+        <appender-ref ref="DefaultAppender" />
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
