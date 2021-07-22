@@ -5,9 +5,7 @@ import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.*;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -191,13 +189,13 @@ public class HttpClientUtil {
 
     /**
      * 设置请求头参数
-     * @param httppost HTTPPOST请求
+     * @param http HTTPPOST请求
      * @param headerParams 请求头参数
      */
-    private static void setHeaderParams(HttpPost httppost, Map<String, String> headerParams) {
+    public static void setHeaderParams(HttpRequestBase http, Map<String, String> headerParams) {
         String []headers = headerParams.keySet().toArray(new String[0]);
         for (String s : headers) {
-            httppost.addHeader(s, headerParams.get(s));
+            http.addHeader(s, headerParams.get(s));
         }
     }
 
@@ -205,7 +203,7 @@ public class HttpClientUtil {
     /**
      *  辅助方法:这个用来设置超时的;
       */
-    private static RequestConfig getConfig() {
+    public static RequestConfig getConfig() {
         return RequestConfig.custom().setConnectionRequestTimeout(60000).setSocketTimeout(120000)
                 .setConnectTimeout(60000).build();
     }
@@ -213,7 +211,7 @@ public class HttpClientUtil {
     /**
      * 设置SSL请求处理
      */
-    private static CloseableHttpClient sslClient() {
+    public static CloseableHttpClient sslClient() {
         try {
             SSLContext ctx = SSLContext.getInstance("TLS");
             X509TrustManager tm = new X509TrustManager() {

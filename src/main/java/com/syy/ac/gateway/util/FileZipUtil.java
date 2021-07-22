@@ -10,7 +10,7 @@ public class FileZipUtil {
      * 原生代码
      * 将一个图片与一个视频文件压缩到 test.zip 中
      */
-    public static void compressFile () throws IOException {
+    public static void compressFile() throws IOException {
         //压缩文件名称与位置
         OutputStream outputStream = new FileOutputStream("f://test.zip");
         //获取压缩文件输出流
@@ -47,16 +47,17 @@ public class FileZipUtil {
     /**
      * zip压缩文 解压
      */
-    public static void deCompressionFile() throws IOException {
+    public static void deCompressionFile(String filePath) throws IOException {
         //读取压缩文件
-        ZipInputStream in = new ZipInputStream(new FileInputStream("f://test.zip"));
+        ZipInputStream in = new ZipInputStream(new FileInputStream(filePath));
         //zip文件实体类
-        ZipEntry entry;
+        ZipEntry entry ;
         //遍历压缩文件内部 文件数量
-        while((entry = in.getNextEntry()) != null){
+        entry = in.getNextEntry();
+        while(entry!= null){
             if(!entry.isDirectory()){
                 //文件输出流
-                FileOutputStream out = new FileOutputStream( "f://java_zip/"+entry.getName());
+                FileOutputStream out = new FileOutputStream( filePath+entry.getName());
                 BufferedOutputStream bos = new BufferedOutputStream(out);
                 int len;
                 byte[] buf = new byte[1024];
@@ -67,6 +68,7 @@ public class FileZipUtil {
                 bos.close();
                 out.close();
             }
+            entry = in.getNextEntry();
         }
     }
 }

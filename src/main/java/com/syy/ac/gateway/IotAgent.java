@@ -1,7 +1,8 @@
 package com.syy.ac.gateway;
 
 import com.syy.ac.gateway.model.AgentConfig;
-import com.syy.ac.gateway.util.HttpClientUtil;
+import com.syy.ac.gateway.util.FileZipUtil;
+import com.syy.ac.gateway.util.HttpsFileUtil;
 import com.syy.ac.gateway.util.MqttFileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,6 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 
 public class IotAgent {
     public static final String PROPERTY_FILE_PATH = "iotagent.properties";
@@ -65,13 +65,34 @@ public class IotAgent {
         header.put("X-HW-APPKEY", "PU1/pOh1PpSxqAfy1a5Ulg==");
         logger.info("请求header参数：{}",header);*/
 
-        String url = "https://iot-data-cloud.oss-cn-guangzhou.aliyuncs.com/video/V1/SystemToIOTOperationVideo.zip\n";
-        logger.info("请求成功，响应结果");
+        // String url = "https://iot-data-cloud.oss-cn-guangzhou.aliyuncs.com/video/V1/SystemToIOTOperationVideo.zip";
+
+        // 文件传输
+/*        String fileFolder = "84f1981fadcd4a3ca97bd6d472d020c9";
+        String fileName = "广东北向应用接入情况统计.txt";
+        String url = "https://172.18.2.116:1443/iotcenter/file-manager-service/v1/file/manager/download?fileFolder=%s&fileName=%s";
+        url = String.format(url, fileFolder, fileName);
+        logger.info("请求地址为{}", url);
+
+        Map<String, String> header = new HashMap<>(4);
+        header.put("X-HW-ID", "iotcenter.key");
+        header.put("X-HW-APPKEY", "PU1/pOh1PpSxqAfy1a5Ulg==");
+        logger.info("请求header参数：{}", header);
+        HttpsFileUtil.download(url,header,"D:\\TEST\\"+fileName);
+        logger.info("请求成功");*/
+
+        // 解压文件
+        try {
+            FileZipUtil.deCompressionFile("D:/TEST/IOTINFO.zip");
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
     }
 
     /**
      * 设置备份目录
-     * @param config    配置信息
+     *
+     * @param config 配置信息
      */
     private static void initialBackupPath(AgentConfig config) {
         String backupFolder = config.getBackupFolder();
@@ -97,6 +118,7 @@ public class IotAgent {
 
     /**
      * 读取配置文件
+     *
      * @return 配置内容
      */
     private static AgentConfig readAgentProperty() {
