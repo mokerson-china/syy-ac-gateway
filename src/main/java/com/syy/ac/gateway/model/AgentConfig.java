@@ -2,7 +2,7 @@ package com.syy.ac.gateway.model;
 
 import java.util.Properties;
 
-public class AgentConfig {
+public class AgentConfig extends AgileControllerConfig{
     private String connectorHost;
     private String connectorPort;
     private String gatewayId;
@@ -19,28 +19,70 @@ public class AgentConfig {
     private String sslVersion;
     private String sslPort;
     private String caCertificateFile;
+    private String replaceVersion;
+    private String replaceDeviceId;
+    private String deviceSetTopic;
+    private String deviceSetReplyTopic;
+    private String topicVersion;
     private int maxMessageSize = 524288;
 
     public AgentConfig(Properties props) {
-        this.connectorHost = props.getProperty("connectorHost");
-        this.connectorPort = props.getProperty("connectorPort");
-        this.gatewayId = props.getProperty("gatewayId");
-        this.connectorUser = props.getProperty("connectorUser");
-        this.connectorPassword = props.getProperty("connectorPassword");
-        this.clientId = props.getProperty("clientId");
-        this.handlerThreadNum = Integer.parseInt(props.getProperty("handlerThreadsNum", "4"));
-        this.backupFolder = props.getProperty("backupFolder");
-        this.gatewayDevice = Boolean.parseBoolean(props.getProperty("isGatewayDevice", "true"));
-        this.topicUseIdentifier = Boolean.parseBoolean(props.getProperty("topicUseIdentifier", "true"));
-        this.deviceIdentifier = props.getProperty("deviceIdentifier");
-        this.sslEnable = Boolean.parseBoolean(props.getProperty("sslEnable", "false"));
-        if (this.sslEnable) {
-            this.sslVersion = props.getProperty("sslVersion", "TLSv1.2");
-            this.sslPort = props.getProperty("sslPort", "8443");
-            this.caCertificateFile = props.getProperty("caCertificateFile");
-        }
+        super(props);
+        this.connectorHost = props.getProperty("mqtt.connectorHost");
+        this.connectorPort = props.getProperty("mqtt.connectorPort");
+        this.gatewayId = props.getProperty("mqtt.gatewayId");
+        this.connectorUser = props.getProperty("mqtt.connectorUser");
+        this.connectorPassword = props.getProperty("mqtt.connectorPassword");
+        this.clientId = props.getProperty("mqtt.clientId");
+        this.handlerThreadNum = Integer.parseInt(props.getProperty("mqtt.handlerThreadsNum", "4"));
+        this.backupFolder = props.getProperty("mqtt.backupFolder");
+        this.deviceSetTopic = props.getProperty("mqtt.sub.topic.deviceSet");
 
+        this.replaceVersion = props.getProperty("mqtt.topic.replaceVersion");
+        this.replaceDeviceId = props.getProperty("mqtt.topic.replaceDeviceId");
+
+        this.deviceSetReplyTopic = props.getProperty("mqtt.pub.topic.deviceSetReply");
+        this.gatewayDevice = Boolean.parseBoolean(props.getProperty("mqtt.isGatewayDevice", "true"));
+        this.topicUseIdentifier = Boolean.parseBoolean(props.getProperty("mqtt.topicUseIdentifier", "true"));
+        this.deviceIdentifier = props.getProperty("mqtt.deviceIdentifier");
+        this.topicVersion = props.getProperty("mqtt.topic.version");
+        this.sslEnable = Boolean.parseBoolean(props.getProperty("mqtt.sslEnable", "false"));
+        if (this.sslEnable) {
+            this.sslVersion = props.getProperty("mqtt.sslVersion", "TLSv1.2");
+            this.sslPort = props.getProperty("mqtt.sslPort", "8443");
+            this.caCertificateFile = props.getProperty("mqtt.caCertificateFile");
+        }
         this.props = props;
+
+        // 替换自带内容，更新每个设备的Topic信息
+        deviceSetTopic.replace(replaceVersion,topicVersion);
+        deviceSetTopic.replace(replaceDeviceId,gatewayId);
+        deviceSetReplyTopic.replace(replaceVersion,topicVersion);
+        deviceSetReplyTopic.replace(replaceDeviceId,gatewayId);
+    }
+
+    public String getReplaceVersion() {
+        return replaceVersion;
+    }
+
+    public void setReplaceVersion(String replaceVersion) {
+        this.replaceVersion = replaceVersion;
+    }
+
+    public String getReplaceDeviceId() {
+        return replaceDeviceId;
+    }
+
+    public void setReplaceDeviceId(String replaceDeviceId) {
+        this.replaceDeviceId = replaceDeviceId;
+    }
+
+    public String getTopicVersion() {
+        return topicVersion;
+    }
+
+    public void setTopicVersion(String topicVersion) {
+        this.topicVersion = topicVersion;
     }
 
     public String getConnectorHost() {
@@ -177,5 +219,31 @@ public class AgentConfig {
 
     public void setMaxMessageSize(int maxMessageSize) {
         this.maxMessageSize = maxMessageSize;
+    }
+
+    @Override
+    public Properties getProps() {
+        return props;
+    }
+
+    @Override
+    public void setProps(Properties props) {
+        this.props = props;
+    }
+
+    public String getDeviceSetTopic() {
+        return deviceSetTopic;
+    }
+
+    public void setDeviceSetTopic(String deviceSetTopic) {
+        this.deviceSetTopic = deviceSetTopic;
+    }
+
+    public String getDeviceSetReplyTopic() {
+        return deviceSetReplyTopic;
+    }
+
+    public void setDeviceSetReplyTopic(String deviceSetReplyTopic) {
+        this.deviceSetReplyTopic = deviceSetReplyTopic;
     }
 }

@@ -5,7 +5,10 @@ import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -20,7 +23,8 @@ import org.apache.http.util.EntityUtils;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -41,7 +45,7 @@ public class HttpClientUtil {
     /**
      * 以get方式调用第三方接口
      */
-    public static String doGet(String url,Map<String,String> headerParams) {
+    public static String doGet(String url, Map<String, String> headerParams) {
 
         String responseContent = "";
         //1.创建HttpClient对象
@@ -49,7 +53,7 @@ public class HttpClientUtil {
         CloseableHttpResponse response = null;
         try {
             //这里我加了一个是否需要创建一个https连接的判断
-           httpClient = getHttpClient(url.startsWith("https://"));
+            httpClient = getHttpClient(url.startsWith("https://"));
 
             //2.生成get请求对象，并设置请求头信息
             HttpGet httpGet = new HttpGet(url);
@@ -82,13 +86,13 @@ public class HttpClientUtil {
     /**
      * 以post方式调用第三方接口
      */
-    public static String doPost(String url, boolean isHttps, JSONObject paramEntity) {
-        String responseContent = "";
+    public static String doPost(String url, JSONObject paramEntity) {
+        String responseContent = null;
         //1.创建HttpClient对象
         CloseableHttpClient httpClient = null;
         CloseableHttpResponse response = null;
         try {
-            httpClient = getHttpClient(isHttps);
+            httpClient = getHttpClient(url.startsWith("https://"));
             //2.生成post请求对象，并设置请求头信息
             HttpPost httpPost = new HttpPost(url);
             httpPost.addHeader("auth_token", tokenString);
@@ -103,6 +107,7 @@ public class HttpClientUtil {
             response = httpClient.execute(httpPost);
             //5.处理响应信息
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                // responseContent = new JSONObject();
                 responseContent = EntityUtils.toString(response.getEntity(), "utf-8");
                 return responseContent;
             }
@@ -123,7 +128,7 @@ public class HttpClientUtil {
         return responseContent;
     }
 
-    public static CloseableHttpClient getHttpClient(Boolean isHttps)  {
+    public static CloseableHttpClient getHttpClient(Boolean isHttps) {
         if (isHttps) {
             //配置https请求的一些参数
             SSLContext sslContext = null;
@@ -139,7 +144,16 @@ public class HttpClientUtil {
         }
     }
 
-    public static String doPostFile(String url, Map<String, String> param,Map<String, String> header, File file) {
+    /**
+     * 上传文件专用接口
+     *
+     * @param url    请求地址
+     * @param param  BODY参数
+     * @param header 请求头
+     * @param file   文件
+     * @return 上传结果
+     */
+    public static String doPostFile(String url, Map<String, String> param, Map<String, String> header, File file) {
         // 创建Httpclient对象
         CloseableHttpClient httpClient = HttpClients.createDefault();
         // 处理https链接
@@ -171,7 +185,7 @@ public class HttpClientUtil {
             httppost.setEntity(reqEntity);
             // 设置超时时间
             httppost.setConfig(getConfig());
-            setHeaderParams(httppost,header);
+            setHeaderParams(httppost, header);
             response = httpClient.execute(httppost);
             resultString = EntityUtils.toString(response.getEntity(), "UTF-8");
         } catch (Exception e) {
@@ -189,11 +203,12 @@ public class HttpClientUtil {
 
     /**
      * 设置请求头参数
-     * @param http HTTPPOST请求
+     *
+     * @param http         HTTPPOST请求
      * @param headerParams 请求头参数
      */
     public static void setHeaderParams(HttpRequestBase http, Map<String, String> headerParams) {
-        String []headers = headerParams.keySet().toArray(new String[0]);
+        String[] headers = headerParams.keySet().toArray(new String[0]);
         for (String s : headers) {
             http.addHeader(s, headerParams.get(s));
         }
@@ -201,8 +216,8 @@ public class HttpClientUtil {
 
 
     /**
-     *  辅助方法:这个用来设置超时的;
-      */
+     * 辅助方法:这个用来设置超时的;
+     */
     public static RequestConfig getConfig() {
         return RequestConfig.custom().setConnectionRequestTimeout(60000).setSocketTimeout(120000)
                 .setConnectTimeout(60000).build();
@@ -219,10 +234,12 @@ public class HttpClientUtil {
                 public void checkClientTrusted(X509Certificate[] arg0, String arg1)
                         throws CertificateException {
                 }
+
                 @Override
                 public void checkServerTrusted(X509Certificate[] arg0, String arg1)
                         throws CertificateException {
                 }
+
                 @Override
                 public X509Certificate[] getAcceptedIssuers() {
                     return null;

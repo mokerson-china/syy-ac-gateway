@@ -1,19 +1,85 @@
 package com.syy.ac.gateway.util;
 
+import com.syy.ac.gateway.IotAgent;
+import com.syy.ac.gateway.model.AgentConfig;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.Set;
 
 public class MqttFileUtils {
+    private static final String PROPERTY_FILE_PATH = "iotagent.properties";
+
+    private static final Logger logger = LoggerFactory.getLogger(MqttFileUtils.class);
     public MqttFileUtils() {
+    }
+
+    /**
+     * 设置备份目录
+     *
+     * @param config 配置信息
+     */
+    private static void initialBackupPath(AgentConfig config) {
+        String backupFolder = config.getBackupFolder();
+        if (backupFolder == null) {
+            throw new RuntimeException("Can not locate backup folder");
+        } else {
+            File backupFolderDir = new File(backupFolder);
+            if (!backupFolderDir.exists() || !backupFolderDir.isDirectory()) {
+                if (backupFolderDir.exists() && !backupFolderDir.isDirectory()) {
+                    logger.error("Backup folder is not a directory, agent can not use");
+                    throw new RuntimeException("Failed to create backup folder");
+                } else {
+                    try {
+                        MqttFileUtils.createFolders(backupFolder);
+                    } catch (IOException exception) {
+                        logger.error("Backup folder create failed.", exception);
+                        throw new RuntimeException("Failed to create backup folder", exception);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 读取配置文件
+     *
+     * @return 配置内容
+     */
+    public static AgentConfig readAgentProperty() {
+        InputStream propertyStream = IotAgent.class.getClassLoader().getResourceAsStream(PROPERTY_FILE_PATH);
+
+        AgentConfig agentConfig;
+        try {
+            Properties properties = new Properties();
+            properties.load(propertyStream);
+            agentConfig = new AgentConfig(properties);
+        } catch (IOException e) {
+            logger.error("Failed to load property", e);
+            throw new RuntimeException("Property load failed");
+        } finally {
+            if (propertyStream != null) {
+                try {
+                    propertyStream.close();
+                } catch (IOException e) {
+                    logger.error("Failed to close property stream", e);
+                }
+            }
+
+        }
+        if(!"".equals(agentConfig.getBackupFolder()))initialBackupPath(agentConfig);
+        return agentConfig;
     }
 
     public static void createFolders(String folderName) throws IOException {

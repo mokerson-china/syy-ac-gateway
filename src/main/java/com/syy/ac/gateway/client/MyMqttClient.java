@@ -1,6 +1,6 @@
 package com.syy.ac.gateway.client;
 
-import com.syy.ac.gateway.model.AgentConfig;
+import com.syy.ac.gateway.IotAgent;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
@@ -13,20 +13,18 @@ public class MyMqttClient {
     public static MqttClient mqttClient = null;
     private static MemoryPersistence memoryPersistence = null;
     private static MqttConnectOptions mqttConnectOptions = null;
-    private static AgentConfig config = null;
 
-    public void init(AgentConfig config) {
-        MyMqttClient.config = config;
+    public void init() {
         // 初始化连接设置对象, true可以安全地使用内存持久性作为客户端断开连接时清除的所有状态, 设置连接超时
         mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setCleanSession(true);
         mqttConnectOptions.setConnectionTimeout(30);
-        mqttConnectOptions.setUserName(config.getConnectorUser());
-        mqttConnectOptions.setPassword(config.getConnectorPassword().toCharArray());
+        mqttConnectOptions.setUserName(IotAgent.config.getConnectorUser());
+        mqttConnectOptions.setPassword(IotAgent.config.getConnectorPassword().toCharArray());
         // 设置持久化方式
         memoryPersistence = new MemoryPersistence();
         try {
-            mqttClient = new MqttClient("tcp://" + config.getConnectorHost() + ":" + config.getConnectorPort(), config.getClientId(), memoryPersistence);
+            mqttClient = new MqttClient("tcp://" + IotAgent.config.getConnectorHost() + ":" + IotAgent.config.getConnectorPort(), IotAgent.config.getClientId(), memoryPersistence);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -133,7 +131,7 @@ public class MyMqttClient {
                 log.info("mqttClient is null or connect");
             }
         } else {
-            init(config);
+            init();
         }
     }
 
