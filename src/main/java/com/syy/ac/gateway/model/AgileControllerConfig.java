@@ -16,8 +16,8 @@ public class AgileControllerConfig extends FileConfig{
 
     public AgileControllerConfig(Properties props) {
         super(props);
-        this.romaAppId = props.getProperty("ac.roma.mqtt.appId");
-        this.romaAppKey = props.getProperty("ac.roma.mqtt.appKey");
+        this.romaAppId = props.getProperty("ac.add.roma.appId");
+        this.romaAppKey = props.getProperty("ac.add.roma.appKey");
         this.acHost = props.getProperty("ac.http.host");
         this.acPort = props.getProperty("ac.http.port");
         this.acUserName = props.getProperty("ac.http.userName");

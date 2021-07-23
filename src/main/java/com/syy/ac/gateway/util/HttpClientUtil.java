@@ -40,8 +40,6 @@ import java.util.Objects;
  */
 public class HttpClientUtil {
 
-    private static String tokenString = "";
-
     /**
      * 以get方式调用第三方接口
      */
@@ -57,7 +55,6 @@ public class HttpClientUtil {
 
             //2.生成get请求对象，并设置请求头信息
             HttpGet httpGet = new HttpGet(url);
-            httpGet.addHeader("auth_token", tokenString);
             httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36");
             //3.执行请求
             response = httpClient.execute(httpGet);
@@ -86,7 +83,7 @@ public class HttpClientUtil {
     /**
      * 以post方式调用第三方接口
      */
-    public static String doPost(String url, JSONObject paramEntity) {
+    public static String doPost(String url, JSONObject paramEntity, Map<String, String> headers) {
         String responseContent = null;
         //1.创建HttpClient对象
         CloseableHttpClient httpClient = null;
@@ -95,8 +92,7 @@ public class HttpClientUtil {
             httpClient = getHttpClient(url.startsWith("https://"));
             //2.生成post请求对象，并设置请求头信息
             HttpPost httpPost = new HttpPost(url);
-            httpPost.addHeader("auth_token", tokenString);
-            httpPost.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36");
+            setHeaderParams(httpPost, headers);
             //3.设置请求参数
             if (!Objects.isNull(paramEntity)) {
                 String paramStr = JSONObject.toJSONString(paramEntity);
@@ -208,12 +204,20 @@ public class HttpClientUtil {
      * @param headerParams 请求头参数
      */
     public static void setHeaderParams(HttpRequestBase http, Map<String, String> headerParams) {
-        String[] headers = headerParams.keySet().toArray(new String[0]);
-        for (String s : headers) {
-            http.addHeader(s, headerParams.get(s));
+        if (headerParams == null) {
+            http.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36");
+        } else {
+            String[] headers = headerParams.keySet().toArray(new String[0]);
+            for (String s : headers) {
+                http.addHeader(s, headerParams.get(s));
+            }
         }
     }
 
+    public static String doPost(String url, JSONObject paramEntity) {
+        return doPost(url, paramEntity, null);
+
+    }
 
     /**
      * 辅助方法:这个用来设置超时的;
