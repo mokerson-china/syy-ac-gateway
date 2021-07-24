@@ -4,16 +4,17 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.model.AgentConfig;
-import com.syy.ac.gateway.util.HttpsFileUtil;
+import com.syy.ac.gateway.model.AgileControllerFileConfig;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * MQTT协议订阅Topic接受到消息处理
+ * @author TanGuozheng
+ */
 public class MqttReceiveCallback implements MqttCallback {
     private static final Logger logger = LoggerFactory.getLogger(MqttReceiveCallback.class);
 
@@ -40,14 +41,15 @@ public class MqttReceiveCallback implements MqttCallback {
             String method = subMessage.getString("method");
             JSONObject params = subMessage.getJSONObject("params");
             switch (method){
-                // 文件下载处理
+                // 接收到文件下载消息
                 case "ContainerDownload":
                     JSONArray files = params.getJSONArray("files");
 
                     for(int i =0,j=files.size();i<j;i++){
                         JSONObject file = files.getJSONObject(i);
-
-
+                        // 初始化文件下载对象
+                        AgileControllerFileConfig fileConfig = new AgileControllerFileConfig(file);
+                        String url = fileConfig.getTransferMode()+fileConfig.getFileServerAddress()+":"+fileConfig.getFileServerPort()+fileConfig.getFileDirectory()+"?fileFolder=%s&fileName=%s";
                     }
                 default:
                     logger.info("消息内容不规范，请检查后再发送：{}",subMessage);

@@ -6,7 +6,10 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * MQTT客户端连接配置类
+ * @author TanGuozheng
+ */
 public class MyMqttClient {
 
     private static final Logger log = LoggerFactory.getLogger(MyMqttClient.class);

@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
+/**
+ * 第三方网关接入AC启动类
+ * @author TanGuozheng
+ */
 public class IotAgent {
     private static final Logger logger = LoggerFactory.getLogger(IotAgent.class);
     public static AgentConfig config = null;
