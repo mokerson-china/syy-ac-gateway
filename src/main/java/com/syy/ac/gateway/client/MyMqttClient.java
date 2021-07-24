@@ -14,7 +14,7 @@ public class MyMqttClient {
     private static MemoryPersistence memoryPersistence = null;
     private static MqttConnectOptions mqttConnectOptions = null;
 
-    public void init() {
+public void init() {
         // 初始化连接设置对象, true可以安全地使用内存持久性作为客户端断开连接时清除的所有状态, 设置连接超时
         mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setCleanSession(true);
@@ -41,15 +41,20 @@ public class MyMqttClient {
                 try {
                     log.info("创建MQTT连接");
                     mqttClient.connect(mqttConnectOptions);
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                }
+                    // 连接成功后开始订阅MQTT Topic
+                    String[] topics = IotAgent.config.getSubTopic();
+
+                    this.subTopic(topics);
+
+
+            } catch(MqttException e){
+                e.printStackTrace();
             }
-        } else {
-            log.info("MQTT客户端ID为空");
         }
-        log.info(String.valueOf(mqttClient.isConnected()));
     }
+    assert mqttClient != null;
+    log.info(String.valueOf(mqttClient.isConnected()));
+}
 
     //	关闭连接
     public void closeConnect() {
@@ -139,8 +144,26 @@ public class MyMqttClient {
     public void subTopic(String topic) {
         if (null != mqttClient && mqttClient.isConnected()) {
             try {
-                log.info("订阅主题成功，主题名为：{}",topic);
+                log.info("订阅主题成功，主题名为：{}", topic);
                 mqttClient.subscribe(topic, 1);
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        } else {
+            log.info("客户端ID不存在或者是连接异常");
+        }
+    }
+
+    //	订阅主题
+    public void subTopic(String[] topic) {
+        if (null != mqttClient && mqttClient.isConnected()) {
+            try {
+                mqttClient.subscribe(topic);
+                int i = 0;
+                for(String s:topic){
+                    i++;
+                    log.info("MQTT程序成功订阅第{}个主题，主题名称为：{}",i,s);
+                }
             } catch (MqttException e) {
                 e.printStackTrace();
             }

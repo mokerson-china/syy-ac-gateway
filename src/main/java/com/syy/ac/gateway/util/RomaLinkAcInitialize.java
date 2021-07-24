@@ -50,6 +50,10 @@ public class RomaLinkAcInitialize {
         logger.info("ROMA对接AC-----增加第三方设备档案信息-----请求成功结果为：{}",result);
     }
 
+    /**
+     * 根据不同的请求类型，设置不同版本的Token获取方式
+     * @param requestType   请求类型
+     */
     private void setRequestToken(int requestType) {
         String token;
         if(requestType == 0){

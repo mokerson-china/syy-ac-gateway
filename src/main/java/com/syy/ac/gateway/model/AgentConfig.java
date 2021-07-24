@@ -1,8 +1,9 @@
 package com.syy.ac.gateway.model;
 
+import java.util.List;
 import java.util.Properties;
 
-public class AgentConfig extends AgileControllerConfig{
+public class AgentConfig extends AgileControllerConfig {
     private String connectorHost;
     private String connectorPort;
     private String gatewayId;
@@ -21,8 +22,21 @@ public class AgentConfig extends AgileControllerConfig{
     private String caCertificateFile;
     private String replaceVersion;
     private String replaceDeviceId;
+    /**
+     * 设备管理Topic配置
+     */
     private String deviceSetTopic;
     private String deviceSetReplyTopic;
+
+    /**
+     * 容器管理Topic配置
+     */
+    private String virtualizationSet;
+    private String virtualizationGet;
+
+    private String[] subTopic;
+    private String[] pubTopic;
+
     private String topicVersion;
     private int maxMessageSize = 524288;
 
@@ -36,12 +50,16 @@ public class AgentConfig extends AgileControllerConfig{
         this.clientId = props.getProperty("mqtt.clientId");
         this.handlerThreadNum = Integer.parseInt(props.getProperty("mqtt.handlerThreadsNum", "4"));
         this.backupFolder = props.getProperty("mqtt.backupFolder");
+
         this.deviceSetTopic = props.getProperty("mqtt.sub.topic.deviceSet");
+        this.deviceSetReplyTopic = props.getProperty("mqtt.pub.topic.deviceSetReply");
+
+        this.virtualizationSet = props.getProperty("mqtt.sub.topic.virtualizationSet");
+        this.virtualizationGet = props.getProperty("mqtt.pub.topic.virtualizationGet");
 
         this.replaceVersion = props.getProperty("mqtt.topic.replaceVersion");
         this.replaceDeviceId = props.getProperty("mqtt.topic.replaceDeviceId");
 
-        this.deviceSetReplyTopic = props.getProperty("mqtt.pub.topic.deviceSetReply");
         this.gatewayDevice = Boolean.parseBoolean(props.getProperty("mqtt.isGatewayDevice", "true"));
         this.topicUseIdentifier = Boolean.parseBoolean(props.getProperty("mqtt.topicUseIdentifier", "true"));
         this.deviceIdentifier = props.getProperty("mqtt.deviceIdentifier");
@@ -55,10 +73,47 @@ public class AgentConfig extends AgileControllerConfig{
         this.props = props;
 
         // 替换自带内容，更新每个设备的Topic信息
-        deviceSetTopic.replace(replaceVersion,topicVersion);
-        deviceSetTopic.replace(replaceDeviceId,gatewayId);
-        deviceSetReplyTopic.replace(replaceVersion,topicVersion);
-        deviceSetReplyTopic.replace(replaceDeviceId,gatewayId);
+        deviceSetTopic=deviceSetTopic.replace(replaceVersion,topicVersion).replace(replaceDeviceId,gatewayId);
+
+        deviceSetReplyTopic=deviceSetReplyTopic.replace(replaceDeviceId,gatewayId).replace(replaceVersion,topicVersion);
+
+        virtualizationGet=virtualizationGet.replace(replaceVersion,topicVersion).replace(replaceDeviceId,gatewayId);
+
+        virtualizationSet=virtualizationSet.replace(replaceVersion,topicVersion).replace(replaceDeviceId,gatewayId);
+
+        // 订阅Topic名称集合
+        subTopic = new String[3];
+        subTopic[0] = deviceSetTopic;
+        subTopic[1] = virtualizationGet;
+        subTopic[2] = virtualizationSet;
+
+        // 发布Topic名称集合
+        pubTopic = new String[1];
+        pubTopic[0] = deviceSetReplyTopic;
+    }
+
+    public String getVirtualizationSet() {
+        return virtualizationSet;
+    }
+
+    public void setVirtualizationSet(String virtualizationSet) {
+        this.virtualizationSet = virtualizationSet;
+    }
+
+    public String getVirtualizationGet() {
+        return virtualizationGet;
+    }
+
+    public void setVirtualizationGet(String virtualizationGet) {
+        this.virtualizationGet = virtualizationGet;
+    }
+
+    public String[] getSubTopic() {
+        return subTopic;
+    }
+
+    public void setSubTopic(String[] subTopic) {
+        this.subTopic = subTopic;
     }
 
     public String getReplaceVersion() {
