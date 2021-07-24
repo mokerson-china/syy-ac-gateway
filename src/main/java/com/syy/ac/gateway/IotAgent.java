@@ -23,7 +23,6 @@ public class IotAgent {
         RomaLinkAcInitialize acInit = new RomaLinkAcInitialize(config);
 
 
-
         /*//文件上传
         String url = "https://172.18.2.116:1443/iotcenter/file-manager-service/v1/file/manager/upload";
         Map<String,String> map = new HashMap<>(4);

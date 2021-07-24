@@ -15,16 +15,13 @@ public class RomaLinkAcInitialize {
 
     private final Logger logger = LoggerFactory.getLogger(HttpsFileUtil.class);
     private final String acBaseUrl;
-    private final String token;
     private final AgentConfig config;
     private Map<String, String> header;
 
     public RomaLinkAcInitialize(AgentConfig config) {
         this.config = config;
         acBaseUrl = "https://" + config.getAcHost() + ":" + config.getAcPort();
-        this.token = this.getAcToken();
-        logger.info("ROMA对接AC------获取Token值为：{}", token);
-        this.setRequestToken();
+        this.setRequestToken(0);
         // AC增加ROMA应用
         this.addRomaApp();
         // AC增加ROMA设备档案信息
@@ -36,13 +33,31 @@ public class RomaLinkAcInitialize {
         String url = acBaseUrl + config.getAddDeviceInfoURL();
         JSONObject params = new JSONObject();
         List<Map<String, String>> devices = new ArrayList<>();
-        // ROMA APP信息
-        Map<String, String> appInfo = new HashMap<>(6);
-        appInfo.put("id", config.getRomaAppId());
-        appInfo.put("key", config.getRomaAppId());
+        // ROMA Device信息
+        Map<String, String> appInfo = new HashMap<>(8);
+        appInfo.put("esn", config.getDeviceEsn());
+        appInfo.put("name", config.getDeviceName());
+        appInfo.put("type", config.getDeviceType());
+        appInfo.put("description", config.getDeviceDescription());
+        appInfo.put("thirdPartyClientId", config.getDeviceThirdPartyClientId());
+        appInfo.put("thirdPartyAppId", config.getDeviceThirdPartyAppId());
+        devices.add(appInfo);
+        params.put("devices",devices);
+        logger.info("ROMA对接AC-----增加第三方设备档案信息——————请求URL为：{}",url);
+        logger.info("ROMA对接AC-----增加第三方设备档案信息——————请求参数为：{}",params.toString());
+        this.setRequestToken(1);
+        JSONObject result = JSONObject.parseObject(HttpClientUtil.doPost(url, params, header));
+        logger.info("ROMA对接AC-----增加第三方设备档案信息-----请求成功结果为：{}",result);
     }
 
-    private void setRequestToken() {
+    private void setRequestToken(int requestType) {
+        String token;
+        if(requestType == 0){
+            token = this.getAcToken();
+        }else{
+            token = this.getAcTokenAcIot();
+        }
+        logger.info("ROMA对接AC------获取Token值为：{}", token);
         header = new HashMap<>(3);
         header.put("X-ACCESS-TOKEN", token);
         logger.info("ROMA对接AC接口请求头设置成功");
@@ -60,6 +75,8 @@ public class RomaLinkAcInitialize {
         apps.add(appInfo);
         // 添加到apps参数中
         params.put("apps", apps);
+        logger.info("ROMA对接AC-----增加APP信息——————请求URL为：{}",url);
+        logger.info("ROMA对接AC-----增加APP信息——————请求参数为：{}",params.toString());
         JSONObject result = JSONObject.parseObject(HttpClientUtil.doPost(url, params, header));
         logger.info("ROMA对接AC-----增加APP信息-----请求成功");
         JSONObject data = result.getJSONObject("data");
@@ -70,8 +87,28 @@ public class RomaLinkAcInitialize {
         }
     }
 
+    /**
+     * 第一种AC鉴权方式
+     * @return  获取的Token值
+     */
     private String getAcToken() {
         String url = acBaseUrl + config.getAcTokenURL();
+        JSONObject params = new JSONObject();
+        params.put("userName", config.getAcUserName());
+        params.put("password", config.getAcPassword());
+        logger.info("AC获取Token请求地址：{}", url);
+        logger.info("AC获取Token请求参数：{}", params.toString());
+        JSONObject result = JSONObject.parseObject(HttpClientUtil.doPost(url, params));
+        logger.info("AC获取Token请求成功-------------------------------");
+        return result.getJSONObject("data").getString("token_id");
+    }
+
+    /**
+     * 第二种AC鉴权的方式
+     * @return 获取的Token值
+     */
+    private String getAcTokenAcIot() {
+        String url = acBaseUrl + config.getAcTokenURLAcIot();
         JSONObject params = new JSONObject();
         params.put("userName", config.getAcUserName());
         params.put("password", config.getAcPassword());

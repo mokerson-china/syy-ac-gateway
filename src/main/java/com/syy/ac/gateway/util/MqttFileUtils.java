@@ -6,15 +6,14 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
@@ -58,11 +57,17 @@ public class MqttFileUtils {
      * @return 配置内容
      */
     public static AgentConfig readAgentProperty() {
-        InputStream propertyStream = IotAgent.class.getClassLoader().getResourceAsStream(PROPERTY_FILE_PATH);
+        InputStreamReader propertyStream = null;
+        try {
+            propertyStream = new InputStreamReader(Objects.requireNonNull(MqttFileUtils.class.getClassLoader().getResourceAsStream(PROPERTY_FILE_PATH)),"utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
 
         AgentConfig agentConfig;
         try {
             Properties properties = new Properties();
+
             properties.load(propertyStream);
             agentConfig = new AgentConfig(properties);
         } catch (IOException e) {

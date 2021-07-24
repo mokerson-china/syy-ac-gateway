@@ -105,8 +105,10 @@ public class HttpClientUtil {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                 // responseContent = new JSONObject();
                 responseContent = EntityUtils.toString(response.getEntity(), "utf-8");
-                return responseContent;
+            }else{
+                responseContent = response.getEntity().toString();
             }
+            return responseContent;
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
