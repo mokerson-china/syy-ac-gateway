@@ -8,6 +8,11 @@ public class DeviceKeepalive {
     private String deviceId;
     private String type;
     private Date eventTime;
+
+    public DeviceKeepalive() {
+
+    }
+
     public void setMessageId(String messageId) {
         this.messageId = messageId;
     }
