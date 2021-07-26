@@ -25,7 +25,6 @@ public class AgileControllerConfig extends FileConfig{
      */
     private String addAppInfoURL;
     private String addDeviceInfoURL;
-
     /**
      * 新增的设备档案信息
      */
@@ -35,6 +34,7 @@ public class AgileControllerConfig extends FileConfig{
     private String deviceDescription;
     private String deviceThirdPartyClientId;
     private String deviceThirdPartyAppId;
+
 
     public AgileControllerConfig(Properties props) {
         super(props);

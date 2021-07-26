@@ -1,0 +1,39 @@
+/**
+  * Copyright 2021 bejson.com 
+  */
+package com.syy.ac.gateway.model.message;
+
+import java.util.List;
+
+/**
+ * Auto-generated: 2021-07-26 20:14:5
+ *
+ * @author TanGuozheng
+ */
+public class Performance {
+
+    private int cpuUseRate;
+    private int memoryUseRate;
+    private List<StoragesUseRate> storagesUseRate;
+    public void setCpuUseRate(int cpuUseRate) {
+         this.cpuUseRate = cpuUseRate;
+     }
+     public int getCpuUseRate() {
+         return cpuUseRate;
+     }
+
+    public void setMemoryUseRate(int memoryUseRate) {
+         this.memoryUseRate = memoryUseRate;
+     }
+     public int getMemoryUseRate() {
+         return memoryUseRate;
+     }
+
+    public void setStoragesUseRate(List<StoragesUseRate> storagesUseRate) {
+         this.storagesUseRate = storagesUseRate;
+     }
+     public List<StoragesUseRate> getStoragesUseRate() {
+         return storagesUseRate;
+     }
+
+}

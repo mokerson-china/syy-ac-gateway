@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * MQTT客户端连接配置类
+ *
  * @author TanGuozheng
  */
 public class MyMqttClient {
@@ -17,7 +18,7 @@ public class MyMqttClient {
     private static MemoryPersistence memoryPersistence = null;
     private static MqttConnectOptions mqttConnectOptions = null;
 
-public void init() {
+    public static void init() {
         // 初始化连接设置对象, true可以安全地使用内存持久性作为客户端断开连接时清除的所有状态, 设置连接超时
         mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setCleanSession(true);
@@ -46,18 +47,13 @@ public void init() {
                     mqttClient.connect(mqttConnectOptions);
                     // 连接成功后开始订阅MQTT Topic
                     String[] topics = IotAgent.config.getSubTopic();
-
-                    this.subTopic(topics);
-
-
-            } catch(MqttException e){
-                e.printStackTrace();
+                    subTopic(topics);
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
-    assert mqttClient != null;
-    log.info(String.valueOf(mqttClient.isConnected()));
-}
 
     //	关闭连接
     public void closeConnect() {
@@ -90,10 +86,8 @@ public void init() {
     }
 
     //	发布消息
-    public void publishMessage(String pubTopic, String message, int qos) {
+    public static void publishMessage(String pubTopic, String message, int qos) {
         if (null != mqttClient && mqttClient.isConnected()) {
-            log.info("发布消息   " + mqttClient.isConnected());
-            log.info("id:" + mqttClient.getClientId());
             MqttMessage mqttMessage = new MqttMessage();
             mqttMessage.setQos(qos);
             mqttMessage.setPayload(message.getBytes());
@@ -102,6 +96,8 @@ public void init() {
 
             if (null != topic) {
                 try {
+                    log.info("设备开始发布消息，发布主题为：{}", pubTopic);
+                    log.info("发布内容为：{}", message);
                     MqttDeliveryToken publish = topic.publish(mqttMessage);
                     if (!publish.isComplete()) {
                         log.info("消息发布成功");
@@ -118,12 +114,12 @@ public void init() {
     }
 
     //	发布消息
-    public void publishMessage(String pubTopic, String message) {
+    public static void publishMessage(String pubTopic, String message) {
         publishMessage(pubTopic, message, 1);
     }
 
     //	重新连接
-    public void reConnect() {
+    public static void reConnect() {
         if (null != mqttClient) {
             if (!mqttClient.isConnected()) {
                 if (null != mqttConnectOptions) {
@@ -158,14 +154,14 @@ public void init() {
     }
 
     //	订阅主题
-    public void subTopic(String[] topic) {
+    public static void subTopic(String[] topic) {
         if (null != mqttClient && mqttClient.isConnected()) {
             try {
                 mqttClient.subscribe(topic);
                 int i = 0;
-                for(String s:topic){
+                for (String s : topic) {
                     i++;
-                    log.info("MQTT程序成功订阅第{}个主题，主题名称为：{}",i,s);
+                    log.info("MQTT程序成功订阅第{}个主题，主题名称为：{}", i, s);
                 }
             } catch (MqttException e) {
                 e.printStackTrace();

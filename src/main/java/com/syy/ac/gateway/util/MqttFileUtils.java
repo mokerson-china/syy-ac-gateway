@@ -1,6 +1,5 @@
 package com.syy.ac.gateway.util;
 
-import com.syy.ac.gateway.IotAgent;
 import com.syy.ac.gateway.model.AgentConfig;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -18,7 +17,7 @@ import java.util.Properties;
 import java.util.Set;
 
 public class MqttFileUtils {
-    private static final String PROPERTY_FILE_PATH = "iotagent.properties";
+    private static final String PROPERTY_FILE_PATH = "iotagentXIANHONG.properties";
 
     private static final Logger logger = LoggerFactory.getLogger(MqttFileUtils.class);
     public MqttFileUtils() {

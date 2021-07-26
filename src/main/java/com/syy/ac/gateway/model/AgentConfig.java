@@ -1,5 +1,6 @@
 package com.syy.ac.gateway.model;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -22,24 +23,26 @@ public class AgentConfig extends AgileControllerConfig {
     private String caCertificateFile;
     private String replaceVersion;
     private String replaceDeviceId;
+    private List<String> customTopicList;
     /**
      * 设备管理Topic配置
      */
     private String deviceSetTopic;
     private String deviceSetReplyTopic;
-
+    private String[] subTopic;
+    private String[] pubTopic;
     /**
      * 容器管理Topic配置
      */
     private String virtualizationSet;
     private String virtualizationGet;
-
-    private String[] subTopic;
-    private String[] pubTopic;
-
+    private String subLoginGet;
+    private String subLoginSet;
+    private String pubLoginGetReply;
+    private String pubLoginSetReply;
+    private String pubKeepaliveEvent;
     private String topicVersion;
     private int maxMessageSize = 524288;
-
     public AgentConfig(Properties props) {
         super(props);
         this.connectorHost = props.getProperty("mqtt.connectorHost");
@@ -50,12 +53,19 @@ public class AgentConfig extends AgileControllerConfig {
         this.clientId = props.getProperty("mqtt.clientId");
         this.handlerThreadNum = Integer.parseInt(props.getProperty("mqtt.handlerThreadsNum", "4"));
         this.backupFolder = props.getProperty("mqtt.backupFolder");
+        this.customTopicList = Arrays.asList(props.getProperty("mqtt.custom.topic").split(";"));
 
         this.deviceSetTopic = props.getProperty("mqtt.sub.topic.deviceSet");
         this.deviceSetReplyTopic = props.getProperty("mqtt.pub.topic.deviceSetReply");
 
         this.virtualizationSet = props.getProperty("mqtt.sub.topic.virtualizationSet");
         this.virtualizationGet = props.getProperty("mqtt.pub.topic.virtualizationGet");
+
+        this.subLoginGet = props.getProperty("mqtt.sub.topic.login.get");
+        this.subLoginSet = props.getProperty("mqtt.sub.topic.login.set");
+        this.pubLoginGetReply = props.getProperty("mqtt.pub.topic.login.get.reply");
+        this.pubLoginSetReply = props.getProperty("mqtt.pub.topic.login.set.reply");
+        this.pubKeepaliveEvent = props.getProperty("mqtt.pub.topic.login.keepalive.event");
 
         this.replaceVersion = props.getProperty("mqtt.topic.replaceVersion");
         this.replaceDeviceId = props.getProperty("mqtt.topic.replaceDeviceId");
@@ -73,23 +83,81 @@ public class AgentConfig extends AgileControllerConfig {
         this.props = props;
 
         // 替换自带内容，更新每个设备的Topic信息
-        deviceSetTopic=deviceSetTopic.replace(replaceVersion,topicVersion).replace(replaceDeviceId,gatewayId);
+        deviceSetTopic = deviceSetTopic.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
 
-        deviceSetReplyTopic=deviceSetReplyTopic.replace(replaceDeviceId,gatewayId).replace(replaceVersion,topicVersion);
+        deviceSetReplyTopic = deviceSetReplyTopic.replace(replaceDeviceId, gatewayId).replace(replaceVersion, topicVersion);
 
-        virtualizationGet=virtualizationGet.replace(replaceVersion,topicVersion).replace(replaceDeviceId,gatewayId);
+        virtualizationGet = virtualizationGet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
 
-        virtualizationSet=virtualizationSet.replace(replaceVersion,topicVersion).replace(replaceDeviceId,gatewayId);
+        virtualizationSet = virtualizationSet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
+
+        subLoginGet = subLoginGet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
+        subLoginSet = subLoginSet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
+        pubLoginGetReply = pubLoginGetReply.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
+        pubLoginSetReply = pubLoginSetReply.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
+        pubKeepaliveEvent = pubKeepaliveEvent.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
 
         // 订阅Topic名称集合
-        subTopic = new String[3];
-        subTopic[0] = deviceSetTopic;
-        subTopic[1] = virtualizationGet;
-        subTopic[2] = virtualizationSet;
+        subTopic = new String[]{deviceSetTopic,virtualizationGet,virtualizationSet,subLoginGet,subLoginSet};
 
         // 发布Topic名称集合
-        pubTopic = new String[1];
-        pubTopic[0] = deviceSetReplyTopic;
+        pubTopic = new String[]{deviceSetReplyTopic,pubLoginGetReply,pubLoginSetReply,pubKeepaliveEvent};
+    }
+
+    public List<String> getCustomTopicList() {
+        return customTopicList;
+    }
+
+    public String getSubLoginGet() {
+        return subLoginGet;
+    }
+
+    public void setSubLoginGet(String subLoginGet) {
+        this.subLoginGet = subLoginGet;
+    }
+
+    public String getSubLoginSet() {
+        return subLoginSet;
+    }
+
+    public void setSubLoginSet(String subLoginSet) {
+        this.subLoginSet = subLoginSet;
+    }
+
+    public String getPubLoginGetReply() {
+        return pubLoginGetReply;
+    }
+
+    public void setPubLoginGetReply(String pubLoginGetReply) {
+        this.pubLoginGetReply = pubLoginGetReply;
+    }
+
+    public String getPubLoginSetReply() {
+        return pubLoginSetReply;
+    }
+
+    public void setPubLoginSetReply(String pubLoginSetReply) {
+        this.pubLoginSetReply = pubLoginSetReply;
+    }
+
+    public String getPubKeepaliveEvent() {
+        return pubKeepaliveEvent;
+    }
+
+    public void setPubKeepaliveEvent(String pubKeepaliveEvent) {
+        this.pubKeepaliveEvent = pubKeepaliveEvent;
+    }
+
+    public void setCustomTopicList(List<String> customTopicList) {
+        this.customTopicList = customTopicList;
+    }
+
+    public String[] getPubTopic() {
+        return pubTopic;
+    }
+
+    public void setPubTopic(String[] pubTopic) {
+        this.pubTopic = pubTopic;
     }
 
     public String getVirtualizationSet() {
