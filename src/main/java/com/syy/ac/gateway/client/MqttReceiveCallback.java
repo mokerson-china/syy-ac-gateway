@@ -7,6 +7,7 @@ import com.syy.ac.gateway.model.AgentConfig;
 import com.syy.ac.gateway.model.AgileControllerFileConfig;
 import com.syy.ac.gateway.model.DeviceRegisterReplay;
 import com.syy.ac.gateway.model.message.DeviceStateReplay;
+import com.syy.ac.gateway.util.MqttFileUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * MQTT协议订阅Topic接受到消息处理
@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadFactory;
  */
 public class MqttReceiveCallback implements MqttCallback {
     private static final Logger logger = LoggerFactory.getLogger(MqttReceiveCallback.class);
+    private static final String DEVICEINFO_PROPERTIES = "deviceinfo.properties";
 
     private static AgentConfig config = null;
     /**
@@ -101,9 +102,9 @@ public class MqttReceiveCallback implements MqttCallback {
             JSONObject messages = JSONObject.parseObject(message.toString());
             String method = messages.getString("method");
             if ("DeviceState".equals(method)) {
-                // 获取设备信息
-                DeviceStateReplay device = new DeviceStateReplay(config);
-                // 配置设备信息
+                // 生成设备信息，返回给AC平台
+                DeviceStateReplay device = new DeviceStateReplay(MqttFileUtils.readAgentProperty(DEVICEINFO_PROPERTIES),config);
+                MyMqttClient.publishMessage(config.getPubLoginGetReply(),JSONObject.toJSONString(device));
             } else if("DeviceRegister".equals(method)){
                 // 设备注册结果回复
                 DeviceRegisterReplay register = new DeviceRegisterReplay();

@@ -3,15 +3,19 @@
   */
 package com.syy.ac.gateway.model.message;
 
-
 /**
  * Auto-generated: 2021-07-26 20:14:5
  *
  * @author TanGuozheng
  */
-public class Cpu {
+public class GatewayMemory {
 
     private int total;
+
+    public GatewayMemory(int total) {
+        this.total = total;
+    }
+
     public void setTotal(int total) {
          this.total = total;
      }

@@ -55,20 +55,18 @@ public class MqttFileUtils {
      *
      * @return 配置内容
      */
-    public static AgentConfig readAgentProperty() {
+    public static Properties readAgentProperty(String fileName) {
         InputStreamReader propertyStream = null;
+        Properties properties =null;
         try {
-            propertyStream = new InputStreamReader(Objects.requireNonNull(MqttFileUtils.class.getClassLoader().getResourceAsStream(PROPERTY_FILE_PATH)),"utf-8");
+            propertyStream = new InputStreamReader(Objects.requireNonNull(MqttFileUtils.class.getClassLoader().getResourceAsStream(fileName)),"utf-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-
-        AgentConfig agentConfig;
         try {
-            Properties properties = new Properties();
+            properties = new Properties();
 
             properties.load(propertyStream);
-            agentConfig = new AgentConfig(properties);
         } catch (IOException e) {
             logger.error("Failed to load property", e);
             throw new RuntimeException("Property load failed");
@@ -82,8 +80,7 @@ public class MqttFileUtils {
             }
 
         }
-        if(!"".equals(agentConfig.getBackupFolder()))initialBackupPath(agentConfig);
-        return agentConfig;
+        return properties;
     }
 
     public static void createFolders(String folderName) throws IOException {

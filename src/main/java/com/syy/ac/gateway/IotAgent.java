@@ -15,12 +15,13 @@ import java.util.Date;
  * @author TanGuozheng
  */
 public class IotAgent {
+    private static final String IOTAGENT_PROPERTIES = "iotagent.properties";
     private static final Logger logger = LoggerFactory.getLogger(IotAgent.class);
     public static AgentConfig config = null;
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static void main(String[] args) {
-        config = MqttFileUtils.readAgentProperty();
+        config = new AgentConfig(MqttFileUtils.readAgentProperty(IOTAGENT_PROPERTIES));
         MyMqttClient.init();
         RomaLinkAcInitialize acInit = new RomaLinkAcInitialize(config);
 

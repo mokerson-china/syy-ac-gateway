@@ -4,7 +4,6 @@
 package com.syy.ac.gateway.model.message;
 
 import java.util.List;
-import java.util.Date;
 
 
 /**
@@ -23,11 +22,11 @@ public class DeviceStateInfo {
     private String state;
     private String version;
     private String patchVersion;
-    private Date kernelVersion;
+    private String kernelVersion;
     private String hardwareVersion;
     private Cfgfile cfgfile;
     private Clock clock;
-    private Resource resource;
+    private DeviceResource resource;
     private Location location;
     private Performance performance;
     public void setName(String name) {
@@ -93,10 +92,10 @@ public class DeviceStateInfo {
          return patchVersion;
      }
 
-    public void setKernelVersion(Date kernelVersion) {
+    public void setKernelVersion(String kernelVersion) {
          this.kernelVersion = kernelVersion;
      }
-     public Date getKernelVersion() {
+     public String getKernelVersion() {
          return kernelVersion;
      }
 
@@ -121,10 +120,10 @@ public class DeviceStateInfo {
          return clock;
      }
 
-    public void setResource(Resource resource) {
+    public void setResource(DeviceResource resource) {
          this.resource = resource;
      }
-     public Resource getResource() {
+     public DeviceResource getResource() {
          return resource;
      }
 

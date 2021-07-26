@@ -3,7 +3,9 @@
   */
 package com.syy.ac.gateway.model.message;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Auto-generated: 2021-07-26 20:14:5
@@ -15,6 +17,22 @@ public class Performance {
     private int cpuUseRate;
     private int memoryUseRate;
     private List<StoragesUseRate> storagesUseRate;
+
+    public Performance(Properties proper) {
+        cpuUseRate = Integer.parseInt(proper.getProperty("device.info.performance.cpuUseRate"));
+        memoryUseRate = Integer.parseInt(proper.getProperty("device.info.performance.memoryUseRate"));
+        String []storages = proper.getProperty("device.info.performance.storagesUseRate").split(";");
+        storagesUseRate = new ArrayList<>(storages.length);
+        StoragesUseRate temp = new StoragesUseRate();
+        for (String s : storages) {
+            String[] storage = s.split(",");
+            temp.setDevice(storage[0]);
+            temp.setTotalSize(Integer.parseInt(storage[1]));
+            temp.setUsedSize(Integer.parseInt(storage[2]));
+        }
+
+    }
+
     public void setCpuUseRate(int cpuUseRate) {
          this.cpuUseRate = cpuUseRate;
      }

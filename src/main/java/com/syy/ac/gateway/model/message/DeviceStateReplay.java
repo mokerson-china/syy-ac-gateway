@@ -6,6 +6,7 @@ package com.syy.ac.gateway.model.message;
 import com.syy.ac.gateway.model.AgentConfig;
 
 import java.util.Date;
+import java.util.Properties;
 import java.util.UUID;
 
 /**
@@ -14,8 +15,6 @@ import java.util.UUID;
  * @author TanGuozheng
  */
 public class DeviceStateReplay {
-
-    private AgentConfig config;
     private String messageId;
     private Date timestamp;
     private String deviceId;
@@ -23,8 +22,7 @@ public class DeviceStateReplay {
     private DeviceStateInfo info;
     private int code;
 
-    public DeviceStateReplay(AgentConfig config) {
-        this.config = config;
+    public DeviceStateReplay(Properties proper, AgentConfig config) {
         messageId = UUID.randomUUID().toString();
         timestamp = new Date();
         method = "DeviceState";
@@ -32,7 +30,17 @@ public class DeviceStateReplay {
         info = new DeviceStateInfo();
         info.setName(config.getDeviceName());
         info.setEsn(config.getDeviceEsn());
+        info.setMacAddress(proper.getProperty("device.info.macAddress"));
+        info.setVendor(proper.getProperty("device.info.vendor"));
+        info.setState(proper.getProperty("device.info.state"));
+        info.setVersion(proper.getProperty("device.info.version"));
+        info.setPatchVersion("device.info.patchVersion");
+        info.setKernelVersion("device.info.kernelVersion");
+        info.setHardwareVersion("device.info.hardwareVersion");
+        info.setClock(new Clock(proper));
 
+        info.setResource(new DeviceResource(proper));
+        info.setPerformance(new Performance(proper));
     }
 
     public String getMessageId() {
@@ -82,6 +90,4 @@ public class DeviceStateReplay {
     public void setCode(int code) {
         this.code = code;
     }
-
-
 }

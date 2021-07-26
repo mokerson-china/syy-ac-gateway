@@ -2,7 +2,9 @@
   * Copyright 2021 bejson.com 
   */
 package com.syy.ac.gateway.model.message;
+
 import java.util.Date;
+import java.util.Properties;
 
 
 /**
@@ -15,6 +17,13 @@ public class Clock {
     private Date currentDatetime;
     private Date bootDatetime;
     private long upTimes;
+
+    public Clock(Properties proper){
+        currentDatetime = new Date();
+        bootDatetime = new Date();
+        upTimes = System.currentTimeMillis();
+    }
+
     public void setCurrentDatetime(Date currentDatetime) {
          this.currentDatetime = currentDatetime;
      }
