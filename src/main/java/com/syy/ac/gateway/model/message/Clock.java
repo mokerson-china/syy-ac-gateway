@@ -20,8 +20,8 @@ public class Clock {
     private long upTimes;
 
     public Clock(Properties proper){
-        currentDatetime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
-        bootDatetime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date());
+        currentDatetime =new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date());
+        bootDatetime =new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date());
         upTimes = System.currentTimeMillis();
     }
 

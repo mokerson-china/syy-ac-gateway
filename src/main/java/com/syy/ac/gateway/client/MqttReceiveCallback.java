@@ -5,10 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.model.AgentConfig;
 import com.syy.ac.gateway.model.AgileControllerFileConfig;
-import com.syy.ac.gateway.model.message.DeviceKeepalive;
-import com.syy.ac.gateway.model.message.DeviceRegisterReply;
-import com.syy.ac.gateway.model.message.DeviceStateReplay;
-import com.syy.ac.gateway.model.message.RegisterResultMessage;
+import com.syy.ac.gateway.model.message.*;
 import com.syy.ac.gateway.util.DeviceKeepaliveRun;
 import com.syy.ac.gateway.util.Executors;
 import com.syy.ac.gateway.util.MqttFileUtils;
@@ -18,6 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -61,15 +59,32 @@ public class MqttReceiveCallback implements MqttCallback {
 //
 //            MyMqttClient.publishMessage(config.getPubKeepaliveEventReply(), JSONObject.toJSONString(keepalive));
             // 设备上线成功，维持设备上线状态，后台线程定时刷新
-
+            logger.info("收到维持心跳数据：{}",message.toString());
         } else if (topic.equals(config.getSubLoginGet())) {
+            // Topic: /{Version}/{DeviceId}/login/get处理
             // 设备注册回复内容，返回设备消息
             JSONObject messages = JSONObject.parseObject(message.toString());
             String method = messages.getString("method");
             if ("DeviceState".equals(method)) {
-                // 生成设备信息，返回给AC平台
-                DeviceStateReplay device = new DeviceStateReplay(MqttFileUtils.readAgentProperty(DEVICEINFO_PROPERTIES),config);
-                MyMqttClient.publishMessage(config.getPubLoginGetReply(),JSONObject.toJSONString(device));
+//                 生成设备信息，返回给AC平台
+                // 第一层的devices
+                DevicePubData devicesData =new DevicePubData();
+                // 第二层services为第一层devices内的，明确设备的客户端ID和服务列表
+                DeviceServices services = new DeviceServices();
+                services.setDeviceId(config.getClientId());
+                // 第三层serviceData为第二层services内的，明确服务信息和数据
+                DeviceServiceData serviceData = new DeviceServiceData();
+                // 生成设备上报data数据
+                serviceData.setEventTime(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));
+                serviceData.setServiceId(UUID.randomUUID().toString());
+                serviceData.setData(new DeviceStateReplay(MqttFileUtils.readAgentProperty(DEVICEINFO_PROPERTIES),config,messages));
+
+                // 塞入Data数据
+                services.setServices(serviceData);
+                // 塞入服务数据
+                devicesData.setDevices(services);
+                MyMqttClient.publishMessage(config.getPubLoginGetReply(),JSONObject.toJSONString(devicesData));
+
             } else if("DeviceRegister".equals(method)){
                 JSONObject params = messages.getJSONObject("params");
                 if("ture".equals(params.getString("result"))){

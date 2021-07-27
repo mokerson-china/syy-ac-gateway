@@ -55,36 +55,6 @@ public class MyMqttClient {
         }
     }
 
-    //	关闭连接
-    public void closeConnect() {
-        //关闭存储方式
-        if (null != memoryPersistence) {
-            try {
-                memoryPersistence.close();
-            } catch (MqttPersistenceException e) {
-                e.printStackTrace();
-            }
-        } else {
-            log.info("memoryPersistence is null");
-        }
-
-//		关闭连接
-        if (null != mqttClient) {
-            if (mqttClient.isConnected()) {
-                try {
-                    mqttClient.disconnect();
-                    mqttClient.close();
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                log.info("mqttClient is not connect");
-            }
-        } else {
-            log.info("mqttClient is null");
-        }
-    }
-
     //	发布消息
     public static void publishMessage(String pubTopic, String message, int qos) {
         if (null != mqttClient && mqttClient.isConnected()) {
@@ -100,7 +70,7 @@ public class MyMqttClient {
                     log.info("发布内容为：{}", message);
                     MqttDeliveryToken publish = topic.publish(mqttMessage);
                     if (!publish.isComplete()) {
-                        log.info("消息发布成功");
+                        log.info("消息发布成功......");
                     }
                 } catch (MqttException e) {
                     e.printStackTrace();
@@ -140,20 +110,6 @@ public class MyMqttClient {
     }
 
     //	订阅主题
-    public void subTopic(String topic) {
-        if (null != mqttClient && mqttClient.isConnected()) {
-            try {
-                log.info("订阅主题成功，主题名为：{}", topic);
-                mqttClient.subscribe(topic, 1);
-            } catch (MqttException e) {
-                e.printStackTrace();
-            }
-        } else {
-            log.info("客户端ID不存在或者是连接异常");
-        }
-    }
-
-    //	订阅主题
     public static void subTopic(String[] topic) {
         if (null != mqttClient && mqttClient.isConnected()) {
             try {
@@ -163,6 +119,50 @@ public class MyMqttClient {
                     i++;
                     log.info("MQTT程序成功订阅第{}个主题，主题名称为：{}", i, s);
                 }
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        } else {
+            log.info("客户端ID不存在或者是连接异常");
+        }
+    }
+
+    //	关闭连接
+    public void closeConnect() {
+        //关闭存储方式
+        if (null != memoryPersistence) {
+            try {
+                memoryPersistence.close();
+            } catch (MqttPersistenceException e) {
+                e.printStackTrace();
+            }
+        } else {
+            log.info("memoryPersistence is null");
+        }
+
+//		关闭连接
+        if (null != mqttClient) {
+            if (mqttClient.isConnected()) {
+                try {
+                    mqttClient.disconnect();
+                    mqttClient.close();
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                log.info("mqttClient is not connect");
+            }
+        } else {
+            log.info("mqttClient is null");
+        }
+    }
+
+    //	订阅主题
+    public void subTopic(String topic) {
+        if (null != mqttClient && mqttClient.isConnected()) {
+            try {
+                log.info("订阅主题成功，主题名为：{}", topic);
+                mqttClient.subscribe(topic, 1);
             } catch (MqttException e) {
                 e.printStackTrace();
             }

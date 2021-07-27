@@ -55,10 +55,10 @@ public class RomaLinkAcInitialize {
                 "                {\n" +
                 "                    \"data\": {\n" +
                 "                        \"messageId\": \""+UUID.randomUUID()+"\",\n" +
-                "                        \"timestamp\": \""+new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date())+"\",\n" +
+                "                        \"timestamp\": \""+new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date())+"\",\n" +
                 "                        \"deviceId\": \""+config.getDeviceEsn()+"\",\n" +
                 "                        \"type\": \"DeviceHello\",\n" +
-                "                        \"eventTime\": \""+new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date())+"\"\n" +
+                "                        \"eventTime\": \""+new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date())+"\"\n" +
                 "                    },\n" +
                 "                    \"eventTime\": \"20191023T173625Z\",\n" +
                 "                    \"serviceId\": \"serviceName\"\n" +

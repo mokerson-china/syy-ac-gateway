@@ -1,10 +1,10 @@
-/**
- * Copyright 2021 bejson.com
- */
+
 package com.syy.ac.gateway.model.message;
 
+import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.model.AgentConfig;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 import java.util.UUID;
@@ -16,31 +16,37 @@ import java.util.UUID;
  */
 public class DeviceStateReplay {
     private String messageId;
-    private Date timestamp;
+    private String timestamp;
     private String deviceId;
     private String method;
-    private DeviceStateInfo info;
+    private DeviceStateInfo params;
     private int code;
 
-    public DeviceStateReplay(Properties proper, AgentConfig config) {
-        messageId = UUID.randomUUID().toString();
-        timestamp = new Date();
-        method = "DeviceState";
+    public DeviceStateReplay(Properties proper, AgentConfig config, JSONObject paramsObject) {
+        this.messageId = paramsObject.getString("messageId");
+        this.timestamp =new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date());
+        this.method = "DeviceState";
+        this.deviceId=config.getClientId();
 
-        info = new DeviceStateInfo();
-        info.setName(config.getDeviceName());
-        info.setEsn(config.getDeviceEsn());
-        info.setMacAddress(proper.getProperty("device.info.macAddress"));
-        info.setVendor(proper.getProperty("device.info.vendor"));
-        info.setState(proper.getProperty("device.info.state"));
-        info.setVersion(proper.getProperty("device.info.version"));
-        info.setPatchVersion("device.info.patchVersion");
-        info.setKernelVersion("device.info.kernelVersion");
-        info.setHardwareVersion("device.info.hardwareVersion");
-        info.setClock(new Clock(proper));
+        params = new DeviceStateInfo();
+        params.setName(config.getDeviceName());
+        params.setEsn(config.getDeviceEsn());
+        params.setModel(config.getDeviceType());
 
-        info.setResource(new DeviceResource(proper));
-        info.setPerformance(new Performance(proper));
+        params.setMacAddress(proper.getProperty("device.info.macAddress"));
+        params.setVendor(proper.getProperty("device.info.vendor"));
+        params.setState(proper.getProperty("device.info.state"));
+        params.setVersion(proper.getProperty("device.info.version"));
+        params.setPatchVersion(proper.getProperty("device.info.patchVersion"));
+        params.setKernelVersion(proper.getProperty("device.info.kernelVersion"));
+        params.setHardwareVersion(proper.getProperty("device.info.hardwareVersion"));
+        params.setClock(new Clock(proper));
+
+        params.setResource(new DeviceResource(proper));
+        params.setPerformance(new Performance(proper));
+
+        this.code = 200;
+
     }
 
     public String getMessageId() {
@@ -51,11 +57,11 @@ public class DeviceStateReplay {
         this.messageId = messageId;
     }
 
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -75,12 +81,12 @@ public class DeviceStateReplay {
         this.method = method;
     }
 
-    public DeviceStateInfo getInfo() {
-        return info;
+    public DeviceStateInfo getParams() {
+        return params;
     }
 
-    public void setInfo(DeviceStateInfo info) {
-        this.info = info;
+    public void setParams(DeviceStateInfo params) {
+        this.params = params;
     }
 
     public int getCode() {

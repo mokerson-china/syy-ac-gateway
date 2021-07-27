@@ -23,12 +23,14 @@ public class Performance {
         memoryUseRate = Integer.parseInt(proper.getProperty("device.info.performance.memoryUseRate"));
         String []storages = proper.getProperty("device.info.performance.storagesUseRate").split(";");
         storagesUseRate = new ArrayList<>(storages.length);
-        StoragesUseRate temp = new StoragesUseRate();
+        StoragesUseRate temp = null;
         for (String s : storages) {
             String[] storage = s.split(",");
+            temp = new StoragesUseRate();
             temp.setDevice(storage[0]);
             temp.setTotalSize(Integer.parseInt(storage[1]));
             temp.setUsedSize(Integer.parseInt(storage[2]));
+            storagesUseRate.add(temp);
         }
 
     }

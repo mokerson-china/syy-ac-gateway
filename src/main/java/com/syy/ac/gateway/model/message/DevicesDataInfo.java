@@ -13,7 +13,7 @@ import java.util.List;
 public class DevicesDataInfo {
 
     private String deviceId;
-    private List<MqttMessageServices> services;
+    private List<DeviceServices> services;
     public void setDeviceId(String deviceId) {
          this.deviceId = deviceId;
      }
@@ -21,10 +21,10 @@ public class DevicesDataInfo {
          return deviceId;
      }
 
-    public void setServices(List<MqttMessageServices> services) {
+    public void setServices(List<DeviceServices> services) {
          this.services = services;
      }
-     public List<MqttMessageServices> getServices() {
+     public List<DeviceServices> getServices() {
          return services;
      }
 
