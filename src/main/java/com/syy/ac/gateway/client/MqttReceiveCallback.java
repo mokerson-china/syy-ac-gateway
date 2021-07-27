@@ -5,15 +5,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.IotAgent;
 import com.syy.ac.gateway.model.AgileControllerFileConfig;
 import com.syy.ac.gateway.model.message.RegisterResultMessage;
-import com.syy.ac.gateway.util.DeviceKeepaliveRun;
-import com.syy.ac.gateway.util.Executors;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutorService;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * MQTT协议订阅Topic接受到消息处理
@@ -41,7 +40,7 @@ public class MqttReceiveCallback implements MqttCallback {
      */
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-        logger.info("收到Topic————：{}的消息，消息内容为————：\n{}", topic, message);
+        logger.info("————收到Topic：{}\n消息内容为：————\n{}", topic, message);
         JSONObject messages = JSONObject.parseObject(message.toString());
         if(topic.equals(IotAgent.config.getSubLogKeepaliveEvent())){
 //            JSONObject messages = JSONObject.parseObject(message.toString());
@@ -70,13 +69,13 @@ public class MqttReceiveCallback implements MqttCallback {
             JSONObject params = messages.getJSONObject("params");
             if("ture".equals(params.getString("result"))){
                 // 设备注册结果回复
+                MyMqttClient.publishMessage(IotAgent.config.getPubLoginSetReply(),createMsg.getPubLoginSetReplyMessage(method));
+
                 // 创建线程，持续保持设备上线
-                ExecutorService executor = Executors.newFixedThreadPool(2);
-                executor.submit(new DeviceKeepaliveRun(IotAgent.config));
+                this.createTimerKeepAlive(IotAgent.config.getPubKeepaliveEventReply(),method);
             }else{
                 logger.info("注册失败，失败原因为：{}", RegisterResultMessage.valueOf(params.getString("failReason")).getDescription());
             }
-            MyMqttClient.publishMessage(IotAgent.config.getPubLoginSetReply(),createMsg.getPubLoginSetReplyMessage(method));
         }else if(topic.equals(IotAgent.config.getVirtualizationGet())){
             // 获取容器状态
             String method = messages.getString("method");
@@ -122,6 +121,23 @@ public class MqttReceiveCallback implements MqttCallback {
                 logger.info("Client 接收消息内容: {}" , new String(message.getPayload()));
             }*/
         }
+    }
+
+    /**
+     * 创建线程，持续维持网关在AC上的心跳
+     * @param topic 心跳推送的Topic
+     * @param method    心跳方法
+     */
+    private void createTimerKeepAlive(String topic,String method) {
+        final long[] countKeep = {0};
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            public void run() {
+                countKeep[0]++;
+                MyMqttClient.publishMessage(topic, createMsg.getKeepAlive(method));
+                logger.info("成功发起第 {} 次心跳维持。。。。。。", countKeep[0]);
+            }
+        }, 200000 , 1000);
     }
 
     @Override

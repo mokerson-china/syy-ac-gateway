@@ -18,6 +18,11 @@ public class CreateMessage {
     private DeviceServiceData serviceData;
     private DeviceStateReplay deviceState;
 
+    /**
+     * 生成容器状态数据
+     * @param method    容器方法
+     * @return  JSON格式
+     */
     public String getVirtualizationGetRep(String method) {
         this.newObject();
         deviceState =  this.setDeviceState(method);
@@ -26,6 +31,11 @@ public class CreateMessage {
         return this.getDevicesPubData(devicesData);
     }
 
+    /**
+     * 生成注册返回的设备状态数据
+     * @param method    注册方法
+     * @return  JSON格式
+     */
     public String getPubLoginSetReplyMessage(String method) {
         this.newObject();
         DeviceRegisterReply registerReply = new DeviceRegisterReply();
@@ -37,6 +47,10 @@ public class CreateMessage {
         return this.getDevicesPubData(registerReply);
     }
 
+    /**
+     * 生成注册后响应的设备状态内容
+     * @return  JSON格式消息
+     */
     public String getLoginGetReplyMessage() {
         this.newObject();
         deviceState = this.setDeviceState("DeviceState");
@@ -62,6 +76,11 @@ public class CreateMessage {
         return this.getDevicesPubData(deviceState);
     }
 
+    /**
+     * 生成设备的状态数据
+     * @param method   设备状态方法
+     * @return  JSON格式消息
+     */
     private DeviceStateReplay setDeviceState(String method) {
         deviceState = new DeviceStateReplay();
         deviceState.setParams(UUID.randomUUID().toString());
@@ -72,6 +91,9 @@ public class CreateMessage {
         return deviceState;
     }
 
+    /**
+     * 为每次发送不同类型消息的时候创建新的对象
+     */
     private void newObject() {
         // 第一层的devices
         devicesData = new DevicePubData();
@@ -81,6 +103,11 @@ public class CreateMessage {
         serviceData = new DeviceServiceData();
     }
 
+    /**
+     * 返回标准的ROMA上报数据格式
+     * @param o 任何对象
+     * @return  JSON格式
+     */
     private String getDevicesPubData(Object o) {
         services.setDeviceId(IotAgent.config.getClientId());
         serviceData.setServiceId("ServiceName");
@@ -90,5 +117,20 @@ public class CreateMessage {
         services.setServices(serviceData);
         devicesData.setDevices(services);
         return JSONObject.toJSONString(devicesData);
+    }
+
+    /**
+     * 第三方网关心跳维持消息获取
+     * @param method    心跳维持方法
+     * @return  心跳维持消息JSON格式
+     */
+    public String getKeepAlive(String method) {
+        this.newObject();
+        DeviceKeepalive keepalive = new DeviceKeepalive();
+        keepalive.setType(method);
+        keepalive.setDeviceId(IotAgent.config.getClientId());
+        keepalive.setEventTime(new Date());
+        keepalive.setMessageId(UUID.randomUUID().toString());
+        return this.getDevicesPubData(keepalive);
     }
 }
