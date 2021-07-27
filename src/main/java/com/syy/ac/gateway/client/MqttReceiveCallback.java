@@ -9,6 +9,8 @@ import com.syy.ac.gateway.model.message.DeviceKeepalive;
 import com.syy.ac.gateway.model.message.DeviceRegisterReply;
 import com.syy.ac.gateway.model.message.DeviceStateReplay;
 import com.syy.ac.gateway.model.message.RegisterResultMessage;
+import com.syy.ac.gateway.util.DeviceKeepaliveRun;
+import com.syy.ac.gateway.util.Executors;
 import com.syy.ac.gateway.util.MqttFileUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -30,16 +32,7 @@ public class MqttReceiveCallback implements MqttCallback {
     private static final String DEVICEINFO_PROPERTIES = "deviceinfo.properties";
 
     private static AgentConfig config = null;
-    /**
-     * 创建线程
-     */
-    private static ExecutorService exec = java.util.concurrent.Executors.newCachedThreadPool(r -> {
-        Thread t = new Thread(r);
-        t.setName("worker-thread-" + UUID.randomUUID().toString());
-        return t;
-    });
-
-    public void init(AgentConfig config) {
+    public static void init(AgentConfig config) {
         MqttReceiveCallback.config = config;
     }
 
@@ -56,22 +49,20 @@ public class MqttReceiveCallback implements MqttCallback {
      */
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-        logger.info("收到Topic{}的消息，消息内容为\n{}", topic, message);
+        logger.info("收到Topic————：{}的消息，消息内容为————：\n{}", topic, message);
 
         if(topic.equals(config.getSubLogKeepaliveEvent())){
-            JSONObject messages = JSONObject.parseObject(message.toString());
-            DeviceKeepalive keepalive = new DeviceKeepalive();
-            keepalive.setMessageId(messages.getString("messageId"));
-            keepalive.setType("KeepAlive");
-            keepalive.setEventTime(new Date());
-            keepalive.setDeviceId(config.getClientId());
-
-
-            MyMqttClient.publishMessage(config.getPubKeepaliveEventReply(), JSONObject.toJSONString(keepalive));
+//            JSONObject messages = JSONObject.parseObject(message.toString());
+//            DeviceKeepalive keepalive = new DeviceKeepalive();
+//            keepalive.setMessageId(messages.getString("messageId"));
+//            keepalive.setType("KeepAlive");
+//            keepalive.setEventTime(new Date());
+//            keepalive.setDeviceId(config.getClientId());
+//
+//            MyMqttClient.publishMessage(config.getPubKeepaliveEventReply(), JSONObject.toJSONString(keepalive));
             // 设备上线成功，维持设备上线状态，后台线程定时刷新
-//            ExecutorService executor = Executors.newFixedThreadPool(2);
-//            executor.submit(new DeviceKeepaliveRun(config));
-        } else if (config.getSubLoginGet().equals(topic)) {
+
+        } else if (topic.equals(config.getSubLoginGet())) {
             // 设备注册回复内容，返回设备消息
             JSONObject messages = JSONObject.parseObject(message.toString());
             String method = messages.getString("method");
@@ -89,11 +80,15 @@ public class MqttReceiveCallback implements MqttCallback {
                     registerReply.setDeviceId(config.getClientId());
                     registerReply.setMethod("DeviceRegister");
                     registerReply.setEventTime(new Date());
+
+                    // 创建线程，持续保持设备上线
+                    ExecutorService executor = Executors.newFixedThreadPool(2);
+                    executor.submit(new DeviceKeepaliveRun(config));
                 }else{
                     logger.info("注册失败，失败原因为：{}", RegisterResultMessage.valueOf(params.getString("failReason")).getDescription());
                 }
             }
-        }else if (config.getVirtualizationSet().equals(topic)) {
+        }else if (topic.equals(config.getVirtualizationSet())) {
             JSONObject subMessage = JSON.parseObject(message.toString());
             String method = subMessage.getString("method");
             JSONObject params = subMessage.getJSONObject("params");
@@ -113,9 +108,6 @@ public class MqttReceiveCallback implements MqttCallback {
             }
 /*
             if(1){
-                logger.info("Client 接收消息主题: {}" , topic);
-                logger.info("Client 接收消息Qos: {}" , message.getQos());
-                logger.info("Client 接收消息内容: {}" , new String(message.getPayload()))
                 // 接收到下载文件请求，立即下载文件
 
                 String fileFolder = "84f1981fadcd4a3ca97bd6d472d020c9";

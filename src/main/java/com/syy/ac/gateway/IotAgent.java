@@ -1,6 +1,7 @@
 package com.syy.ac.gateway;
 
 import com.alibaba.fastjson.JSONObject;
+import com.syy.ac.gateway.client.MqttReceiveCallback;
 import com.syy.ac.gateway.client.MyMqttClient;
 import com.syy.ac.gateway.model.AgentConfig;
 import com.syy.ac.gateway.util.MqttFileUtils;
@@ -23,6 +24,7 @@ public class IotAgent {
     public static void main(String[] args) {
         config = new AgentConfig(MqttFileUtils.readAgentProperty(IOTAGENT_PROPERTIES));
         MyMqttClient.init();
+        MqttReceiveCallback.init(config);
         RomaLinkAcInitialize acInit = new RomaLinkAcInitialize(config);
 
         /*//文件上传
