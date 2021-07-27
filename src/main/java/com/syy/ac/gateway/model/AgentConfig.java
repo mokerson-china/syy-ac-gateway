@@ -36,6 +36,7 @@ public class AgentConfig extends AgileControllerConfig {
      */
     private String virtualizationSet;
     private String virtualizationGet;
+    private String virtualizationGetRep;
     private String subLoginGet;
     private String subLoginSet;
     private String subLogKeepaliveEvent;
@@ -61,6 +62,7 @@ public class AgentConfig extends AgileControllerConfig {
 
         this.virtualizationSet = props.getProperty("mqtt.sub.topic.virtualizationSet");
         this.virtualizationGet = props.getProperty("mqtt.pub.topic.virtualizationGet");
+        this.virtualizationGetRep = props.getProperty("mqtt.pub.topic.virtualization.get.reply");
 
         this.subLoginGet = props.getProperty("mqtt.sub.topic.login.get");
         this.subLoginSet = props.getProperty("mqtt.sub.topic.login.set");
@@ -108,6 +110,14 @@ public class AgentConfig extends AgileControllerConfig {
 
     public String getSubLogKeepaliveEvent() {
         return subLogKeepaliveEvent;
+    }
+
+    public String getVirtualizationGetRep() {
+        return virtualizationGetRep;
+    }
+
+    public void setVirtualizationGetRep(String virtualizationGetRep) {
+        this.virtualizationGetRep = virtualizationGetRep;
     }
 
     public void setSubLogKeepaliveEvent(String subLogKeepaliveEvent) {
