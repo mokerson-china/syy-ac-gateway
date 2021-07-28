@@ -16,16 +16,16 @@ public class CreateMessage {
     private DevicePubData devicesData;
     private DeviceServices services;
     private DeviceServiceData serviceData;
-    private DeviceStateReplay deviceState;
 
     /**
      * 生成容器状态数据
      * @param method    容器方法
      * @return  JSON格式
      */
-    public String getVirtualizationGetRep(String method) {
+    public String getVirtualizationGetRep(String messageId,String method) {
         this.newObject();
-        deviceState =  this.setDeviceState(method);
+        DeviceStateReplay deviceState;
+        deviceState =  this.setDeviceState(messageId,method);
         Containers container = new Containers(MqttFileUtils.readAgentProperty(CONTAINER_PROPERTIES));
         deviceState.setParams(container);
         return this.getDevicesPubData(devicesData);
@@ -36,10 +36,10 @@ public class CreateMessage {
      * @param method    注册方法
      * @return  JSON格式
      */
-    public String getPubLoginSetReplyMessage(String method) {
+    public String getPubLoginSetReplyMessage(String messageId,String method) {
         this.newObject();
         DeviceRegisterReply registerReply = new DeviceRegisterReply();
-        registerReply.setMessageId(UUID.randomUUID().toString());
+        registerReply.setMessageId(messageId);
         registerReply.setDeviceId(IotAgent.config.getClientId());
         registerReply.setMethod(method);
         registerReply.setEventTime(new Date());
@@ -51,9 +51,9 @@ public class CreateMessage {
      * 生成注册后响应的设备状态内容
      * @return  JSON格式消息
      */
-    public String getLoginGetReplyMessage() {
+    public String getLoginGetReplyMessage(String messageId,String method) {
         this.newObject();
-        deviceState = this.setDeviceState("DeviceState");
+        DeviceStateReplay deviceState = this.setDeviceState(messageId,method);
         Properties proper = MqttFileUtils.readAgentProperty(DEVICEINFO_PROPERTIES);
 
         DeviceStateInfo params = new DeviceStateInfo();
@@ -81,12 +81,12 @@ public class CreateMessage {
      * @param method   设备状态方法
      * @return  JSON格式消息
      */
-    private DeviceStateReplay setDeviceState(String method) {
-        deviceState = new DeviceStateReplay();
-        deviceState.setParams(UUID.randomUUID().toString());
-        deviceState.setParams(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));
-        deviceState.setParams(method);
-        deviceState.setParams(IotAgent.config.getClientId());
+    private DeviceStateReplay setDeviceState(String messageId,String method) {
+        DeviceStateReplay deviceState = new DeviceStateReplay();
+        deviceState.setMessageId(messageId);
+        deviceState.setTimestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));
+        deviceState.setMethod(method);
+        deviceState.setDeviceId(IotAgent.config.getClientId());
         deviceState.setCode(200);
         return deviceState;
     }
@@ -110,7 +110,7 @@ public class CreateMessage {
      */
     private String getDevicesPubData(Object o) {
         services.setDeviceId(IotAgent.config.getClientId());
-        serviceData.setServiceId("ServiceName");
+        serviceData.setServiceId(UUID.randomUUID().toString());
         serviceData.setEventTime(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));
 
         serviceData.setData(o);

@@ -42,6 +42,8 @@ public class MqttReceiveCallback implements MqttCallback {
     public void messageArrived(String topic, MqttMessage message) {
         logger.info("————收到Topic：{}\n消息内容为：————\n{}", topic, message);
         JSONObject messages = JSONObject.parseObject(message.toString());
+        String method = messages.getString("method");
+        String messageId = messages.getString("messageId");
         if(topic.equals(IotAgent.config.getSubLogKeepaliveEvent())){
 //            JSONObject messages = JSONObject.parseObject(message.toString());
 //            DeviceKeepalive keepalive = new DeviceKeepalive();
@@ -56,20 +58,18 @@ public class MqttReceiveCallback implements MqttCallback {
         } else if (topic.equals(IotAgent.config.getSubLoginGet())) {
             // Topic: /{Version}/{DeviceId}/login/get处理
             // 设备注册回复内容，返回设备消息
-            String method = messages.getString("method");
             if ("DeviceState".equals(method)) {
                 // 返回设备的状态数据
-                MyMqttClient.publishMessage(IotAgent.config.getPubLoginGetReply(),createMsg.getLoginGetReplyMessage());
+                MyMqttClient.publishMessage(IotAgent.config.getPubLoginGetReply(),createMsg.getLoginGetReplyMessage(messageId,method));
             } else if("DeviceRegister".equals(method)){
 
             }
         }else if(topic.equals(IotAgent.config.getSubLoginSet())){
 //          设备注册结果回复
-            String method = messages.getString("method");
             JSONObject params = messages.getJSONObject("params");
-            if("ture".equals(params.getString("result"))){
+            if("true".equals(params.getString("result"))){
                 // 设备注册结果回复
-                MyMqttClient.publishMessage(IotAgent.config.getPubLoginSetReply(),createMsg.getPubLoginSetReplyMessage(method));
+                MyMqttClient.publishMessage(IotAgent.config.getPubLoginSetReply(),createMsg.getPubLoginSetReplyMessage(messageId,method));
 
                 // 创建线程，持续保持设备上线
                 this.createTimerKeepAlive(IotAgent.config.getPubKeepaliveEventReply(),method);
@@ -78,12 +78,10 @@ public class MqttReceiveCallback implements MqttCallback {
             }
         }else if(topic.equals(IotAgent.config.getVirtualizationGet())){
             // 获取容器状态
-            String method = messages.getString("method");
             if(method.equals("ContainerStatus")){
-                MyMqttClient.publishMessage(IotAgent.config.getVirtualizationGetRep(),createMsg.getVirtualizationGetRep(method));
+                MyMqttClient.publishMessage(IotAgent.config.getVirtualizationGetRep(),createMsg.getVirtualizationGetRep(messageId,method));
             }
         }else if (topic.equals(IotAgent.config.getVirtualizationSet())) {
-            String method = messages.getString("method");
             JSONObject params = messages.getJSONObject("params");
             switch (method) {
                 // 接收到文件下载消息
