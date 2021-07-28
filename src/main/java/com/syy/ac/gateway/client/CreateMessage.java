@@ -28,7 +28,7 @@ public class CreateMessage {
         deviceState =  this.setDeviceState(messageId,method);
         Containers container = new Containers(MqttFileUtils.readAgentProperty(CONTAINER_PROPERTIES));
         deviceState.setParams(container);
-        return this.getDevicesPubData(devicesData);
+        return this.getDevicesPubData(deviceState);
     }
 
     /**
@@ -36,7 +36,7 @@ public class CreateMessage {
      * @param method    注册方法
      * @return  JSON格式
      */
-    public String getPubLoginSetReplyMessage(String messageId,String method) {
+    public String getMethodDeviceInfo(String messageId, String method) {
         this.newObject();
         DeviceRegisterReply registerReply = new DeviceRegisterReply();
         registerReply.setMessageId(messageId);
@@ -81,7 +81,7 @@ public class CreateMessage {
      * @param method   设备状态方法
      * @return  JSON格式消息
      */
-    private DeviceStateReplay setDeviceState(String messageId,String method) {
+    public DeviceStateReplay setDeviceState(String messageId,String method) {
         DeviceStateReplay deviceState = new DeviceStateReplay();
         deviceState.setMessageId(messageId);
         deviceState.setTimestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));

@@ -23,6 +23,7 @@ public class MyMqttClient {
         mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setCleanSession(true);
         mqttConnectOptions.setConnectionTimeout(30);
+        mqttConnectOptions.setMaxInflight(1000);
         mqttConnectOptions.setUserName(IotAgent.config.getConnectorUser());
         mqttConnectOptions.setPassword(IotAgent.config.getConnectorPassword().toCharArray());
         // 设置持久化方式

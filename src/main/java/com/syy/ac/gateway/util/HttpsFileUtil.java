@@ -87,7 +87,7 @@ public class HttpsFileUtil {
             File file = new File(filePath);
             // mkdirs()文件夹不存在那么就会创建，存在则返回false
             if(file.getParentFile().mkdirs()){
-                logger.info("======创建文件夹成功======");
+                logger.info("======创建文件成功======");
             }else{
                 logger.info("======文件已存在======");
             }

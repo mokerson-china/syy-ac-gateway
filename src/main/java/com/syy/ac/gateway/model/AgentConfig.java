@@ -94,7 +94,7 @@ public class AgentConfig extends AgileControllerConfig {
         virtualizationGet = virtualizationGet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
 
         virtualizationSet = virtualizationSet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-
+        virtualizationGetRep = virtualizationGetRep.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
         subLoginGet = subLoginGet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
         subLoginSet = subLoginSet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
         pubLoginGetReply = pubLoginGetReply.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);

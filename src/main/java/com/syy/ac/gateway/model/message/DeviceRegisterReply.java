@@ -8,6 +8,7 @@ public class DeviceRegisterReply {
     private String deviceId;
     private String method;
     private Date eventTime;
+    private int code = 200;
 
     public DeviceRegisterReply() {
 
@@ -41,4 +42,11 @@ public class DeviceRegisterReply {
         return eventTime;
     }
 
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
 }
