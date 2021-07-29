@@ -1,6 +1,6 @@
 package com.syy.ac.gateway.util;
 
-import com.syy.ac.gateway.model.AgentConfig;
+import com.syy.ac.gateway.config.AgentConfig;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

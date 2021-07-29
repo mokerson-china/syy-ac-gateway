@@ -3,7 +3,7 @@ package com.syy.ac.gateway.util;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.client.MyMqttClient;
-import com.syy.ac.gateway.model.AgentConfig;
+import com.syy.ac.gateway.config.AgentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

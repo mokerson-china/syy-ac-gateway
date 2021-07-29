@@ -1,4 +1,4 @@
-package com.syy.ac.gateway.model;
+package com.syy.ac.gateway.config;
 
 import java.util.Arrays;
 import java.util.List;

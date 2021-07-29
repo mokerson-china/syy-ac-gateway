@@ -1,7 +1,7 @@
 /**
   * Copyright 2021 bejson.com 
   */
-package com.syy.ac.gateway.model;
+package com.syy.ac.gateway.message;
 import com.syy.ac.gateway.message.DevicesDataInfo;
 
 import java.util.List;

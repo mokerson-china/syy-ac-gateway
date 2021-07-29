@@ -3,7 +3,7 @@ package com.syy.ac.gateway.client;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.IotAgent;
-import com.syy.ac.gateway.model.AgileControllerFileConfig;
+import com.syy.ac.gateway.config.AgileControllerFileConfig;
 import com.syy.ac.gateway.message.RegisterResultMessage;
 import com.syy.ac.gateway.util.HttpsFileUtil;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;

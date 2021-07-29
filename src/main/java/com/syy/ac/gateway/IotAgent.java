@@ -1,15 +1,14 @@
 package com.syy.ac.gateway;
 
-import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.client.MyMqttClient;
-import com.syy.ac.gateway.model.AgentConfig;
+import com.syy.ac.gateway.config.AgentConfig;
 import com.syy.ac.gateway.util.MqttFileUtils;
 import com.syy.ac.gateway.util.RomaLinkAcInitialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
+
 /**
  * 第三方网关接入AC启动类
  * @author TanGuozheng
