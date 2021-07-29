@@ -60,28 +60,4 @@ public class IotAgent {
         // 解压文件
     }
 
-    private boolean publishMessage(MyMqttClient mqttClient){
-
-        JSONObject message = new JSONObject();
-        message.put("key", "value");
-        message.put("reportTime", dateFormat.format(new Date()));
-        mqttClient.publishMessage("/v1/devices/Gateway_Device/datas", "{\n" +
-                "    \"devices\": [\n" +
-                "        {\n" +
-                "            \"deviceId\": \"D527212570kp3O\",\n" +
-                "            \"services\": [\n" +
-                "                {\n" +
-                "                    \"data\": {\n" +
-                "                        \"key\": \"value\"\n" +
-                "                    },\n" +
-                "                    \"eventTime\": \"20191023T173625Z\",\n" +
-                "                    \"serviceId\": \"serviceName\"\n" +
-                "                }\n" +
-                "            ]\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}");
-        mqttClient.subTopic(config.getDeviceSetTopic().replace("${deviceId}", config.getGatewayId()));
-        return true;
-    }
 }

@@ -1,4 +1,4 @@
-package com.syy.ac.gateway.model.message;
+package com.syy.ac.gateway.message;
 
 import java.util.ArrayList;
 import java.util.List;

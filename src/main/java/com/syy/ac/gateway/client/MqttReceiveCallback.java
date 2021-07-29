@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.IotAgent;
 import com.syy.ac.gateway.model.AgileControllerFileConfig;
-import com.syy.ac.gateway.model.message.RegisterResultMessage;
+import com.syy.ac.gateway.message.RegisterResultMessage;
 import com.syy.ac.gateway.util.HttpsFileUtil;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -55,14 +55,14 @@ public class MqttReceiveCallback implements MqttCallback {
             JSONObject params = messages.getJSONObject("params");
             if ("true".equals(params.getString("result"))) {
                 // 设备注册结果回复
-                MyMqttClient.publishMessage(IotAgent.config.getPubLoginSetReply(), createMsg.getMethodDeviceInfo(messageId, method));
+                MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
 
                 // 创建线程，持续保持设备上线
-                this.createTimerKeepAlive(IotAgent.config.getSubLogKeepaliveEvent());
+                this.createTimerKeepAlive(IotAgent.config.getPubKeepaliveEventReply());
             } else {
                 logger.info("注册失败，失败原因为：{}", RegisterResultMessage.valueOf(params.getString("failReason")).getDescription());
             }
-        } else if (method.equals("ContainerStatus")) {
+        } else if ("ContainerStatus".equals(method)) {
             MyMqttClient.publishMessage(topic + "/reply", createMsg.getVirtualizationGetRep(messageId, method));
         } else if ("ContainerDownload".equals(method)) {
             logger.info("------------------------------------------------收到下发文件的内容：{}", message);
@@ -73,15 +73,29 @@ public class MqttReceiveCallback implements MqttCallback {
                 JSONObject file = files.getJSONObject(i);
                 // 初始化文件下载对象
                 AgileControllerFileConfig fileConfig = new AgileControllerFileConfig(file);
-                String url = fileConfig.getTransferMode() + "://" + fileConfig.getFileServerAddress() + ":" + fileConfig.getFileServerPort() + fileConfig.getFileDirectory() + fileConfig.getName();
+                String url = fileConfig.getTransferMode() + "://" + fileConfig.getFileServerAddress() + ":" +
+                        fileConfig.getFileServerPort() + fileConfig.getFileDirectory() + fileConfig.getName();
                 try {
-                    logger.info("开始执行下载，下载地址：{}",url);
+                    logger.info("开始执行下载，下载地址：{}", url);
                     HttpsFileUtil.download(url, null, IotAgent.config.getDownloadPath() + fileConfig.getName());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                logger.info("下载执行完成，下载地址为：" );
+                logger.info("下载执行完成，下载地址为：");
             }
+        } else if ("ContainerDownloadStatus".equals(method)) {
+            // 回复查询文件下载消息
+            JSONArray fileNames = messages.getJSONObject("params").getJSONArray("files");
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getDownloadStatus(fileNames,method,messageId));
+        } else if("ContainerStorageMedia".equals(method)){
+            if(topic.contains("virtualization/get")){
+                // 查看容器可设置的工作目录
+                MyMqttClient.publishMessage(topic + "/reply", createMsg.getContainerStorageMedia(method,messageId));
+            }
+        }else if("LogfileUpload".equals(method)){
+            logger.info("======================================\n\n\n");
+        }else{
+            logger.error("--------------------------------暂未收录该方法，请和管理员联系--------------------------------");
         }
 
 /*
@@ -111,7 +125,7 @@ public class MqttReceiveCallback implements MqttCallback {
     /**
      * 创建线程，持续维持网关在AC上的心跳
      *
-     * @param topic  心跳推送的Topic
+     * @param topic 心跳推送的Topic
      */
     private void createTimerKeepAlive(String topic) {
         final long[] countKeep = {0};

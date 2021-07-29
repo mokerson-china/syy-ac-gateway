@@ -1,4 +1,4 @@
-package com.syy.ac.gateway.model.message;
+package com.syy.ac.gateway.message;
 
 public class DeviceServiceData {
     private Object data;

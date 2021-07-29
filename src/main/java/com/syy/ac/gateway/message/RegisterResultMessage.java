@@ -1,4 +1,4 @@
-package com.syy.ac.gateway.model.message;
+package com.syy.ac.gateway.message;
 
 public enum RegisterResultMessage {
     enum0 ("0","internal error of the controller，表示控制器内部错误"),

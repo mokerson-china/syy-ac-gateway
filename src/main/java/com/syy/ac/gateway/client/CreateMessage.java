@@ -1,14 +1,14 @@
 package com.syy.ac.gateway.client;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.IotAgent;
-import com.syy.ac.gateway.model.message.*;
+import com.syy.ac.gateway.message.*;
 import com.syy.ac.gateway.util.MqttFileUtils;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 public class CreateMessage {
     private static final String DEVICEINFO_PROPERTIES = "deviceinfo.properties";
@@ -26,8 +26,11 @@ public class CreateMessage {
         this.newObject();
         DeviceStateReplay deviceState;
         deviceState =  this.setDeviceState(messageId,method);
-        Containers container = new Containers(MqttFileUtils.readAgentProperty(CONTAINER_PROPERTIES));
-        deviceState.setParams(container);
+        List<Containers > container = new ArrayList<>() ;
+        container.add(new Containers(MqttFileUtils.readAgentProperty(CONTAINER_PROPERTIES)));
+        JSONObject containers = new JSONObject();
+        containers.put("containers",container);
+        deviceState.setParams(containers);
         return this.getDevicesPubData(deviceState);
     }
 
@@ -42,7 +45,7 @@ public class CreateMessage {
         registerReply.setMessageId(messageId);
         registerReply.setDeviceId(IotAgent.config.getClientId());
         registerReply.setMethod(method);
-        registerReply.setEventTime(new Date());
+        registerReply.setEventTime(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));
 
         return this.getDevicesPubData(registerReply);
     }
@@ -132,5 +135,41 @@ public class CreateMessage {
         keepalive.setEventTime(new Date());
         keepalive.setMessageId(UUID.randomUUID().toString());
         return this.getDevicesPubData(keepalive);
+    }
+
+    public String getDownloadStatus(JSONArray fileNames,String method,String messageId) {
+        this.newObject();
+        DeviceStateReplay params = setDeviceState(method,messageId);
+        List<DownloadFileStatus> files = new ArrayList<>();
+        for(int i = 0,j=fileNames.size();i<j;i++){
+            String name = fileNames.getJSONObject(i).getString("name");
+            File file = new File(IotAgent.config.getDownloadPath()+name);
+            DownloadFileStatus status = new DownloadFileStatus();
+            status.setType("lxc-container-ova-pkg");
+            // mkdirs()文件夹不存在那么就会创建，存在则返回false
+            if(file.getParentFile().mkdirs()){
+                // 文件不存在
+                status.setStatus("Error");
+                status.setPercentage(0);
+                status.setErrorCode(1000);
+            }else{
+                // 文件已存在
+                status.setStatus("Success");
+                status.setPercentage(100);
+                status.setErrorCode(0);
+            }
+            status.setName(name);
+            files.add(status);
+        }
+        params.setParams(files);
+        return this.getDevicesPubData(params);
+    }
+
+    public String getContainerStorageMedia(String method, String messageId) {
+        this.newObject();
+        DeviceStateReplay params = setDeviceState(method,messageId);
+        ContainerStorageMedia storageMedia = new ContainerStorageMedia();
+        params.setParams(storageMedia);
+        return this.getDevicesPubData(params);
     }
 }

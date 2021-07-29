@@ -1,4 +1,4 @@
-package com.syy.ac.gateway.model.message;
+package com.syy.ac.gateway.message;
 
 import java.util.Date;
 

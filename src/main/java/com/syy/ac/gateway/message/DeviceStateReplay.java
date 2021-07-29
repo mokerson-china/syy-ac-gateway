@@ -1,5 +1,5 @@
 
-package com.syy.ac.gateway.model.message;
+package com.syy.ac.gateway.message;
 
 /**
  * Auto-generated: 2021-07-26 20:14:5

@@ -1,13 +1,11 @@
-package com.syy.ac.gateway.model.message;
-
-import java.util.Date;
+package com.syy.ac.gateway.message;
 
 public class DeviceRegisterReply {
 
     private String messageId;
     private String deviceId;
     private String method;
-    private Date eventTime;
+    private String eventTime;
     private int code = 200;
 
     public DeviceRegisterReply() {
@@ -35,10 +33,10 @@ public class DeviceRegisterReply {
         return method;
     }
 
-    public void setEventTime(Date eventTime) {
+    public void setEventTime(String eventTime) {
         this.eventTime = eventTime;
     }
-    public Date getEventTime() {
+    public String getEventTime() {
         return eventTime;
     }
 

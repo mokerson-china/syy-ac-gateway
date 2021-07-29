@@ -27,24 +27,12 @@ public class AgentConfig extends AgileControllerConfig {
     /**
      * 设备管理Topic配置
      */
-    private String deviceSetTopic;
-    private String deviceSetReplyTopic;
     private String[] subTopic;
-    private String[] pubTopic;
-    /**
-     * 容器管理Topic配置
-     */
-    private String virtualizationSet;
-    private String virtualizationGet;
-    private String virtualizationGetRep;
-    private String subLoginGet;
-    private String subLoginSet;
-    private String subLogKeepaliveEvent;
-    private String pubLoginGetReply;
-    private String pubLoginSetReply;
+
     private String pubKeepaliveEventReply;
     private String topicVersion;
     private int maxMessageSize = 524288;
+
     public AgentConfig(Properties props) {
         super(props);
         this.connectorHost = props.getProperty("mqtt.connectorHost");
@@ -57,18 +45,7 @@ public class AgentConfig extends AgileControllerConfig {
         this.backupFolder = props.getProperty("mqtt.backupFolder");
         this.customTopicList = Arrays.asList(props.getProperty("mqtt.custom.topic").split(";"));
 
-        this.deviceSetTopic = props.getProperty("mqtt.sub.topic.deviceSet");
-        this.deviceSetReplyTopic = props.getProperty("mqtt.pub.topic.deviceSetReply");
-
-        this.virtualizationSet = props.getProperty("mqtt.sub.topic.virtualizationSet");
-        this.virtualizationGet = props.getProperty("mqtt.pub.topic.virtualizationGet");
-        this.virtualizationGetRep = props.getProperty("mqtt.pub.topic.virtualization.get.reply");
-
-        this.subLoginGet = props.getProperty("mqtt.sub.topic.login.get");
-        this.subLoginSet = props.getProperty("mqtt.sub.topic.login.set");
-        this.subLogKeepaliveEvent = props.getProperty("mqtt.sub.topic.login.keepalive.event");
-        this.pubLoginGetReply = props.getProperty("mqtt.pub.topic.login.get.reply");
-        this.pubLoginSetReply = props.getProperty("mqtt.pub.topic.login.set.reply");
+        this.subTopic = props.getProperty("mqtt.sub.topic.topicList").split(";");
         this.pubKeepaliveEventReply = props.getProperty("mqtt.pub.topic.login.keepalive.event.reply");
 
         this.replaceVersion = props.getProperty("mqtt.topic.replaceVersion");
@@ -87,78 +64,20 @@ public class AgentConfig extends AgileControllerConfig {
         this.props = props;
 
         // 替换自带内容，更新每个设备的Topic信息
-        deviceSetTopic = deviceSetTopic.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-
-        deviceSetReplyTopic = deviceSetReplyTopic.replace(replaceDeviceId, gatewayId).replace(replaceVersion, topicVersion);
-
-        virtualizationGet = virtualizationGet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-        subLogKeepaliveEvent = subLogKeepaliveEvent.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-
-        virtualizationSet = virtualizationSet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-        virtualizationGetRep = virtualizationGetRep.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-        subLoginGet = subLoginGet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-        subLoginSet = subLoginSet.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-        pubLoginGetReply = pubLoginGetReply.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-        pubLoginSetReply = pubLoginSetReply.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
+        for(int i=0;i<subTopic.length;i++){
+            subTopic[i] = subTopic[i].replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
+        }
         pubKeepaliveEventReply = pubKeepaliveEventReply.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
 
-        // 订阅Topic名称集合
-        subTopic = new String[]{deviceSetTopic,virtualizationGet,virtualizationSet,subLoginGet,subLoginSet};
-
-        // 发布Topic名称集合
-        pubTopic = new String[]{deviceSetReplyTopic,pubLoginGetReply,pubLoginSetReply, pubKeepaliveEventReply};
     }
 
-    public String getSubLogKeepaliveEvent() {
-        return subLogKeepaliveEvent;
-    }
-
-    public String getVirtualizationGetRep() {
-        return virtualizationGetRep;
-    }
-
-    public void setVirtualizationGetRep(String virtualizationGetRep) {
-        this.virtualizationGetRep = virtualizationGetRep;
-    }
-
-    public void setSubLogKeepaliveEvent(String subLogKeepaliveEvent) {
-        this.subLogKeepaliveEvent = subLogKeepaliveEvent;
-    }
 
     public List<String> getCustomTopicList() {
         return customTopicList;
     }
 
-    public String getSubLoginGet() {
-        return subLoginGet;
-    }
-
-    public void setSubLoginGet(String subLoginGet) {
-        this.subLoginGet = subLoginGet;
-    }
-
-    public String getSubLoginSet() {
-        return subLoginSet;
-    }
-
-    public void setSubLoginSet(String subLoginSet) {
-        this.subLoginSet = subLoginSet;
-    }
-
-    public String getPubLoginGetReply() {
-        return pubLoginGetReply;
-    }
-
-    public void setPubLoginGetReply(String pubLoginGetReply) {
-        this.pubLoginGetReply = pubLoginGetReply;
-    }
-
-    public String getPubLoginSetReply() {
-        return pubLoginSetReply;
-    }
-
-    public void setPubLoginSetReply(String pubLoginSetReply) {
-        this.pubLoginSetReply = pubLoginSetReply;
+    public void setCustomTopicList(List<String> customTopicList) {
+        this.customTopicList = customTopicList;
     }
 
     public String getPubKeepaliveEventReply() {
@@ -169,33 +88,6 @@ public class AgentConfig extends AgileControllerConfig {
         this.pubKeepaliveEventReply = pubKeepaliveEventReply;
     }
 
-    public void setCustomTopicList(List<String> customTopicList) {
-        this.customTopicList = customTopicList;
-    }
-
-    public String[] getPubTopic() {
-        return pubTopic;
-    }
-
-    public void setPubTopic(String[] pubTopic) {
-        this.pubTopic = pubTopic;
-    }
-
-    public String getVirtualizationSet() {
-        return virtualizationSet;
-    }
-
-    public void setVirtualizationSet(String virtualizationSet) {
-        this.virtualizationSet = virtualizationSet;
-    }
-
-    public String getVirtualizationGet() {
-        return virtualizationGet;
-    }
-
-    public void setVirtualizationGet(String virtualizationGet) {
-        this.virtualizationGet = virtualizationGet;
-    }
 
     public String[] getSubTopic() {
         return subTopic;
@@ -373,21 +265,5 @@ public class AgentConfig extends AgileControllerConfig {
     @Override
     public void setProps(Properties props) {
         this.props = props;
-    }
-
-    public String getDeviceSetTopic() {
-        return deviceSetTopic;
-    }
-
-    public void setDeviceSetTopic(String deviceSetTopic) {
-        this.deviceSetTopic = deviceSetTopic;
-    }
-
-    public String getDeviceSetReplyTopic() {
-        return deviceSetReplyTopic;
-    }
-
-    public void setDeviceSetReplyTopic(String deviceSetReplyTopic) {
-        this.deviceSetReplyTopic = deviceSetReplyTopic;
     }
 }
