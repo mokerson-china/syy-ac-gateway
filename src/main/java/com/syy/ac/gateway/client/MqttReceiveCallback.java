@@ -58,7 +58,7 @@ public class MqttReceiveCallback implements MqttCallback {
                 MyMqttClient.publishMessage(IotAgent.config.getPubLoginSetReply(), createMsg.getMethodDeviceInfo(messageId, method));
 
                 // 创建线程，持续保持设备上线
-                this.createTimerKeepAlive(topic + "/reply", method);
+                this.createTimerKeepAlive(IotAgent.config.getSubLogKeepaliveEvent());
             } else {
                 logger.info("注册失败，失败原因为：{}", RegisterResultMessage.valueOf(params.getString("failReason")).getDescription());
             }
@@ -112,18 +112,17 @@ public class MqttReceiveCallback implements MqttCallback {
      * 创建线程，持续维持网关在AC上的心跳
      *
      * @param topic  心跳推送的Topic
-     * @param method 心跳方法
      */
-    private void createTimerKeepAlive(String topic, String method) {
+    private void createTimerKeepAlive(String topic) {
         final long[] countKeep = {0};
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             public void run() {
                 countKeep[0]++;
-                MyMqttClient.publishMessage(topic, createMsg.getKeepAlive(method));
+                MyMqttClient.publishMessage(topic, createMsg.getKeepAlive("KeepAlive"));
                 logger.info("成功发起第 {} 次心跳维持。。。。。。", countKeep[0]);
             }
-        }, 200000, 60000);
+        }, 5000, 60000);
     }
 
     @Override
