@@ -3,6 +3,7 @@ package com.syy.ac.gateway.message;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -29,7 +30,7 @@ public class Containers {
     private int memoryUsed;
     private int storageTotal;
     private int storageUsed;
-    private List<ContainersVolumes> volumes;
+    private List<ContainersVolumes> volumes = new ArrayList<>();
     private List<String> devices;
 
     public String getImageName() {
@@ -75,6 +76,8 @@ public class Containers {
         this.storageTotal = Integer.parseInt(proper.getProperty("device.info.container.storageTotal"));
         this.storageUsed = Integer.parseInt(proper.getProperty("device.info.container.storageUsed"));
     }
+
+    public Containers() {}
 
     public Containers(JSONObject containers) {
         JSONObject params = containers.getJSONObject("params");

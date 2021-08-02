@@ -8,6 +8,15 @@ public class DeviceKeepalive {
     private String deviceId;
     private String type;
     private String eventTime;
+    private Object params;
+
+    public Object getParams() {
+        return params;
+    }
+
+    public void setParams(Object params) {
+        this.params = params;
+    }
 
     public DeviceKeepalive() {
 

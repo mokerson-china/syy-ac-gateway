@@ -17,8 +17,10 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 /**
  * MQTT协议订阅Topic接受到消息处理
@@ -27,13 +29,10 @@ import java.util.TimerTask;
  */
 public class MqttReceiveCallback implements MqttCallback {
     private static final Logger logger = LoggerFactory.getLogger(MqttReceiveCallback.class);
-    private CreateMessage createMsg;
+    private static final CreateMessage createMsg = new CreateMessage();
+    private static String keepAliveMessageId = UUID.randomUUID().toString();
 
-    public MqttReceiveCallback() {
-        createMsg = new CreateMessage();
-    }
-
-    public static String uploadFile(String filePath, String url) throws Exception {
+    public static String uploadFile( String url,String filePath) throws Exception {
         File file = new File(filePath);
         if (!file.exists() || !file.isFile()) {
             throw new IOException("文件不存在");
@@ -111,6 +110,21 @@ public class MqttReceiveCallback implements MqttCallback {
         return result;
     }
 
+    /**
+     * 创建线程，持续维持网关在AC上的心跳
+     */
+    public static void createTimerKeepAlive() {
+        final long[] countKeep = {0};
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            public void run() {
+                countKeep[0]++;
+                MyMqttClient.publishMessage(IotAgent.config.getPubKeepaliveEventReply(), createMsg.getKeepAlive(keepAliveMessageId, "KeepAlive"));
+                logger.info("成功发起第 {} 次心跳维持。。。。。。", countKeep[0]);
+            }
+        }, 0, 120000);
+    }
+
     @Override
     public void connectionLost(Throwable cause) {
 
@@ -140,7 +154,7 @@ public class MqttReceiveCallback implements MqttCallback {
                 // 设备注册结果回复
                 MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
                 // 创建线程，持续保持设备上线
-                this.createTimerKeepAlive(IotAgent.config.getPubKeepaliveEventReply());
+                createTimerKeepAlive();
             } else {
                 logger.info("注册失败，失败原因为：{}", RegisterResultMessage.valueOf(params.getString("failReason")).getDescription());
             }
@@ -154,7 +168,8 @@ public class MqttReceiveCallback implements MqttCallback {
         } else if ("ContainerDownloadStatus".equals(method)) {
             // 回复查询文件下载消息
             JSONArray fileNames = messages.getJSONObject("params").getJSONArray("files");
-            MyMqttClient.publishMessage(topic + "/reply", createMsg.getDownloadStatus(fileNames, messageId, method));
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getDownloadFileStatus(fileNames, messageId, method));
+
         } else if ("ContainerStorageMedia".equals(method)) {
             if (topic.contains("virtualization/get")) {
                 // 查看容器可设置的工作目录
@@ -174,7 +189,7 @@ public class MqttReceiveCallback implements MqttCallback {
                         fileConfig.getFileServerPort() + fileConfig.getFileDirectory();
                 try {
                     logger.info("开始执行上传文件，上传地址：{}", url);
-                    uploadFile(url, "D:\\TEST\\IOTINFO_2.tar");
+                    uploadFile(url, "D:\\TEST\\test123.tar");
                     logger.info("请求成功");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -191,8 +206,13 @@ public class MqttReceiveCallback implements MqttCallback {
 
         } else if ("ContainerInstall".equals(method)) {
             // 容器安装
-            IotAgent.config.getContainers().add(new Containers(messages));
+            Containers containers = new Containers(messages);
+            IotAgent.config.getContainers().add(containers);
             MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
+
+            // 5秒后返回安装容器内容
+            delayedPublishMsg(5000, IotAgent.config.getCustomTopicList("virtualization/event", "virtualization"),
+                    createMsg.getContainerInstallNotify("ContainerInstallNotify", containers));
         } else if ("ShellScriptLoad".equals(method)) {
             MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
             this.fileDownload(messages);
@@ -200,30 +220,42 @@ public class MqttReceiveCallback implements MqttCallback {
             // 停止容器
             String name = messages.getJSONObject("params").getString("containerName");
             String containerHyperv = messages.getJSONObject("params").getString("containerHyperv");
-            IotAgent.config.getContainers().removeIf(containers -> name.equals(containers.getName()) && containerHyperv.equals(containers.getHyperv()));
+            // 删除容器
+            Containers temp = null;
+            List<Containers> containersList = IotAgent.config.getContainers();
+            if (containersList != null) {
+                for (Containers containers : containersList) {
+                    if (name.equals(containers.getName()) && containerHyperv.equals(containers.getHyperv())) {
+                        temp = containers;
+                        containersList.remove(temp);
+                        break;
+                    }
+                }
+            }
             MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
+
+            delayedPublishMsg(5000, IotAgent.config.getCustomTopicList("virtualization/event", "virtualization"),
+                    createMsg.getContainerInstallNotify("ContainerInstallNotify", temp));
         } else if ("ContainerRestore".equals(method)) {
             // 还原容器
             MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
-        } else {
-            logger.error("--------------------------------{}暂未收录该方法，请和管理员联系--------------------------------", method);
-        }
-    }
-
-    /**
-     * 创建线程，持续维持网关在AC上的心跳
-     *
-     */
-    private void createTimerKeepAlive(String messageId) {
-        final long[] countKeep = {0};
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            public void run() {
-                countKeep[0]++;
-                MyMqttClient.publishMessage(IotAgent.config.getPubKeepaliveEventReply(), createMsg.getKeepAlive(messageId, "KeepAlive"));
-                logger.info("成功发起第 {} 次心跳维持。。。。。。", countKeep[0]);
+        } else if ("ShellScriptLoadStatus".equals(method)) {
+            JSONArray fileNames = messages.getJSONObject("params").getJSONArray("files");
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getDownloadShellStatus(fileNames, messageId, method));
+        } else if("LogfileUploadStatus".equals(method)){
+            JSONArray fileNames = messages.getJSONObject("params").getJSONArray("files");
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getDownloadShellStatus(fileNames, messageId, method));
+        }else {
+            if (method == null || "".equals(method)) {
+                method = messages.getString("type");
+                if ("KeepAlive".equals(method)) {
+                    logger.info("####心跳维持成功#####");
+                    keepAliveMessageId = messages.getString("messageId");
+                }
+            } else {
+                logger.error("--------------------------------{}暂未收录该方法，请和管理员联系--------------------------------", method);
             }
-        }, 0, 60000);
+        }
     }
 
     @Override
@@ -231,7 +263,7 @@ public class MqttReceiveCallback implements MqttCallback {
 
     }
 
-    private void fileDownload(JSONObject messages){
+    private void fileDownload(JSONObject messages) {
         JSONArray files = messages.getJSONObject("params").getJSONArray("files");
         for (int i = 0, j = files.size(); i < j; i++) {
             JSONObject file = files.getJSONObject(i);
@@ -245,7 +277,23 @@ public class MqttReceiveCallback implements MqttCallback {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            logger.info("下载执行完成，下载地址为：");
+            logger.info("下载执行完成");
         }
+    }
+
+    private void delayedPublishMsg(long millis, String topic, JSONObject msg) {
+        new Thread(() -> {
+            // 创建一个新线程用于反馈容器启动情况
+            try {
+                Thread.sleep(millis);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            MyMqttClient.publishMessage(topic, msg.toJSONString());
+        }).start();
+    }
+
+    private void startContainer() {
+
     }
 }

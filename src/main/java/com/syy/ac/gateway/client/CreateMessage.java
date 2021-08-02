@@ -140,7 +140,7 @@ public class CreateMessage {
         return this.getDevicesPubData(keepalive);
     }
 
-    public String getDownloadStatus(JSONArray fileNames,String messageId,String method) {
+    public String getDownloadFileStatus(JSONArray fileNames, String messageId, String method) {
         this.newObject();
         DeviceStateReplay params = setDeviceState(messageId,method);
         List<DownloadFileStatus> files = new ArrayList<>();
@@ -150,25 +150,48 @@ public class CreateMessage {
             DownloadFileStatus status = new DownloadFileStatus();
             status.setType("lxc-container-ova-pkg");
             // mkdirs()文件夹不存在那么就会创建，存在则返回false
-            if(file.getParentFile().mkdirs()){
-                // 文件不存在
-                status.setStatus("Error");
-                status.setPercentage(0);
-                status.setErrorCode(1000);
-            }else{
-                // 文件已存在
-                status.setStatus("Success");
-                status.setPercentage(100);
-                status.setErrorCode(0);
-            }
-            status.setName(name);
-            files.add(status);
+            setDownloadStatusInfo(files, name, file, status);
         }
         JSONObject fileParams = new JSONObject();
         fileParams.put("files",files);
         params.setParams(fileParams);
         return this.getDevicesPubData(params);
     }
+
+    private void setDownloadStatusInfo(List<DownloadFileStatus> files, String name, File file, DownloadFileStatus status) {
+        if(file.getParentFile().mkdirs()){
+            // 文件不存在
+            status.setShellStatus("error");
+            status.setPercentage(0);
+            status.setErrorCode(1000);
+        }else{
+            // 文件已存在
+            status.setShellStatus("success");
+            status.setStatus("success");
+            status.setPercentage(100);
+            status.setErrorCode(0);
+        }
+        status.setName(name);
+        files.add(status);
+    }
+
+    public String getDownloadShellStatus(JSONArray fileNames,String messageId,String method) {
+        this.newObject();
+        DeviceStateReplay params = setDeviceState(messageId,method);
+        List<DownloadFileStatus> files = new ArrayList<>();
+        for(int i = 0,j=fileNames.size();i<j;i++){
+            String name = fileNames.getJSONObject(i).getString("name");
+            File file = new File(IotAgent.config.getDownloadPath()+name);
+            DownloadFileStatus status = new DownloadFileStatus();
+            // mkdirs()文件夹不存在那么就会创建，存在则返回false
+            setDownloadStatusInfo(files, name, file, status);
+        }
+        JSONObject fileParams = new JSONObject();
+        fileParams.put("files",files);
+        params.setParams(fileParams);
+        return this.getDevicesPubData(params);
+    }
+
 
     public String getContainerStorageMedia( String messageId,String method) {
         this.newObject();
@@ -177,5 +200,26 @@ public class CreateMessage {
         storageMedia.add(new ContainerStorageMedia());
         params.setParams(new JSONObject().put("storageMedia",storageMedia));
         return this.getDevicesPubData(params);
+    }
+
+    public JSONObject getContainerInstallNotify(String method,Containers containers) {
+        this.newObject();
+        DeviceKeepalive keepalive = new DeviceKeepalive();
+        keepalive.setType(method);
+        keepalive.setDeviceId(IotAgent.config.getClientId());
+        keepalive.setEventTime(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));
+        keepalive.setMessageId(UUID.randomUUID().toString());
+
+        if(containers != null) {
+            ContainerInstallNotify installNotify = new ContainerInstallNotify();
+            installNotify.setContainerIndex(IotAgent.config.getContainers().size());
+            installNotify.setContainerName(containers.getName());
+            installNotify.setFailReason("OK");
+            installNotify.setResult("lxc_install_success");
+            installNotify.setUuid(containers.getUuid());
+
+            keepalive.setParams(installNotify);
+        }
+        return JSONObject.parseObject(this.getDevicesPubData(keepalive));
     }
 }

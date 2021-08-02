@@ -22,7 +22,7 @@ public class IotAgent {
     public static void main(String[] args) {
         config = new AgentConfig(MqttFileUtils.readAgentProperty(IOTAGENT_PROPERTIES));
         MyMqttClient.init();
-        RomaLinkAcInitialize acInit = new RomaLinkAcInitialize(config);
+        //RomaLinkAcInitialize acInit = new RomaLinkAcInitialize(config);
 
         /*//文件上传
         String url = "https://172.18.2.116:1443/iotcenter/file-manager-service/v1/file/manager/upload";

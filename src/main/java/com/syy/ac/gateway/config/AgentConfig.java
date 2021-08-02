@@ -2,6 +2,7 @@ package com.syy.ac.gateway.config;
 
 import com.syy.ac.gateway.message.Containers;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -26,7 +27,7 @@ public class AgentConfig extends AgileControllerConfig {
     private String replaceVersion;
     private String replaceDeviceId;
     private List<String> customTopicList;
-    private List<Containers> containers;
+    private List<Containers> containers = new ArrayList<>();
 
     /**
      * 设备管理Topic配置
@@ -47,7 +48,7 @@ public class AgentConfig extends AgileControllerConfig {
         this.clientId = props.getProperty("mqtt.clientId");
         this.handlerThreadNum = Integer.parseInt(props.getProperty("mqtt.handlerThreadsNum", "4"));
         this.backupFolder = props.getProperty("mqtt.backupFolder");
-        this.customTopicList = Arrays.asList(props.getProperty("mqtt.custom.topic").split(";"));
+        this.customTopicList = Arrays.asList(props.getProperty("mqtt.pub.custom.topicList").split(";"));
 
         this.subTopic = props.getProperty("mqtt.sub.topic.topicList").split(";");
         this.pubKeepaliveEventReply = props.getProperty("mqtt.pub.topic.login.keepalive.event.reply");
@@ -72,7 +73,6 @@ public class AgentConfig extends AgileControllerConfig {
             subTopic[i] = subTopic[i].replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
         }
         pubKeepaliveEventReply = pubKeepaliveEventReply.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId);
-
     }
 
     public List<Containers> getContainers() {
@@ -85,6 +85,22 @@ public class AgentConfig extends AgileControllerConfig {
 
     public List<String> getCustomTopicList() {
         return customTopicList;
+    }
+
+
+    public String getCustomTopicList(String name,String function) {
+        String topic = null;
+        for (String temp : customTopicList) {
+            if (temp.contains(name)) {
+                topic = temp;
+                break;
+            }
+        }
+        if(topic!=null){
+            return topic.replace(replaceVersion, topicVersion).replace(replaceDeviceId, gatewayId).replace("{Function}",function);
+        }else{
+            return null;
+        }
     }
 
     public void setCustomTopicList(List<String> customTopicList) {

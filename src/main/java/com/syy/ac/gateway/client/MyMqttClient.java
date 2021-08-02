@@ -54,6 +54,7 @@ public class MyMqttClient {
                 }
             }
         }
+        MqttReceiveCallback.createTimerKeepAlive();
     }
 
     //	发布消息
@@ -98,6 +99,11 @@ public class MyMqttClient {
                         mqttClient.connect(mqttConnectOptions);
                     } catch (MqttException e) {
                         e.printStackTrace();
+                        // 关闭连接
+                        closeConnect();
+                        // 重新连接
+                        init();
+                        // 连接后重新订阅
                     }
                 } else {
                     log.info("mqttConnectOptions is null");
@@ -106,7 +112,7 @@ public class MyMqttClient {
                 log.info("mqttClient is null or connect");
             }
         } else {
-            init();
+            log.error("MQTT程序异常。。。");
         }
     }
 
@@ -129,7 +135,7 @@ public class MyMqttClient {
     }
 
     //	关闭连接
-    public void closeConnect() {
+    public static void closeConnect() {
         //关闭存储方式
         if (null != memoryPersistence) {
             try {
