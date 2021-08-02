@@ -7,7 +7,7 @@ public class DeviceKeepalive {
     private String messageId;
     private String deviceId;
     private String type;
-    private Date eventTime;
+    private String eventTime;
 
     public DeviceKeepalive() {
 
@@ -34,10 +34,10 @@ public class DeviceKeepalive {
         return type;
     }
 
-    public void setEventTime(Date eventTime) {
+    public void setEventTime(String eventTime) {
         this.eventTime = eventTime;
     }
-    public Date getEventTime() {
+    public String getEventTime() {
         return eventTime;
     }
 

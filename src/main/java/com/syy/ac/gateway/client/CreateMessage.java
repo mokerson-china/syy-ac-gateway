@@ -26,8 +26,12 @@ public class CreateMessage {
         this.newObject();
         DeviceStateReplay deviceState;
         deviceState =  this.setDeviceState(messageId,method);
-        List<Containers > container = new ArrayList<>() ;
-        container.add(new Containers(MqttFileUtils.readAgentProperty(CONTAINER_PROPERTIES)));
+        List<Containers > container  =  IotAgent.config.getContainers();
+        if(container == null || container.size() == 0){
+            container =  new ArrayList<>();
+            container.add(new Containers(MqttFileUtils.readAgentProperty(CONTAINER_PROPERTIES)));
+            IotAgent.config.setContainers(container);
+        }
         JSONObject containers = new JSONObject();
         containers.put("containers",container);
         deviceState.setParams(containers);
@@ -46,7 +50,6 @@ public class CreateMessage {
         registerReply.setDeviceId(IotAgent.config.getClientId());
         registerReply.setMethod(method);
         registerReply.setEventTime(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));
-
         return this.getDevicesPubData(registerReply);
     }
 
@@ -113,7 +116,7 @@ public class CreateMessage {
      */
     private String getDevicesPubData(Object o) {
         services.setDeviceId(IotAgent.config.getClientId());
-        serviceData.setServiceId(UUID.randomUUID().toString());
+        serviceData.setServiceId("ACMSG");
         serviceData.setEventTime(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));
 
         serviceData.setData(o);
@@ -127,19 +130,19 @@ public class CreateMessage {
      * @param method    心跳维持方法
      * @return  心跳维持消息JSON格式
      */
-    public String getKeepAlive(String method) {
+    public String getKeepAlive(String messageId,String method) {
         this.newObject();
         DeviceKeepalive keepalive = new DeviceKeepalive();
         keepalive.setType(method);
         keepalive.setDeviceId(IotAgent.config.getClientId());
-        keepalive.setEventTime(new Date());
-        keepalive.setMessageId(UUID.randomUUID().toString());
+        keepalive.setEventTime(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date()));
+        keepalive.setMessageId(messageId);
         return this.getDevicesPubData(keepalive);
     }
 
-    public String getDownloadStatus(JSONArray fileNames,String method,String messageId) {
+    public String getDownloadStatus(JSONArray fileNames,String messageId,String method) {
         this.newObject();
-        DeviceStateReplay params = setDeviceState(method,messageId);
+        DeviceStateReplay params = setDeviceState(messageId,method);
         List<DownloadFileStatus> files = new ArrayList<>();
         for(int i = 0,j=fileNames.size();i<j;i++){
             String name = fileNames.getJSONObject(i).getString("name");
@@ -161,15 +164,18 @@ public class CreateMessage {
             status.setName(name);
             files.add(status);
         }
-        params.setParams(files);
+        JSONObject fileParams = new JSONObject();
+        fileParams.put("files",files);
+        params.setParams(fileParams);
         return this.getDevicesPubData(params);
     }
 
-    public String getContainerStorageMedia(String method, String messageId) {
+    public String getContainerStorageMedia( String messageId,String method) {
         this.newObject();
         DeviceStateReplay params = setDeviceState(method,messageId);
-        ContainerStorageMedia storageMedia = new ContainerStorageMedia();
-        params.setParams(storageMedia);
+        List<ContainerStorageMedia> storageMedia = new ArrayList<>(3);
+        storageMedia.add(new ContainerStorageMedia());
+        params.setParams(new JSONObject().put("storageMedia",storageMedia));
         return this.getDevicesPubData(params);
     }
 }

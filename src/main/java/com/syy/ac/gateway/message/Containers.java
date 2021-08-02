@@ -1,5 +1,9 @@
 package com.syy.ac.gateway.message;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -18,12 +22,39 @@ public class Containers {
     private String osType;
     private String osVersion;
     private String ip;
+    private String imageName;
     private int cpuCount;
     private String cpuUsage;
     private int memoryTotal;
     private int memoryUsed;
     private int storageTotal;
     private int storageUsed;
+    private List<ContainersVolumes> volumes;
+    private List<String> devices;
+
+    public String getImageName() {
+        return imageName;
+    }
+
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
+    }
+
+    public List<ContainersVolumes> getVolumes() {
+        return volumes;
+    }
+
+    public void setVolumes(List<ContainersVolumes> volumes) {
+        this.volumes = volumes;
+    }
+
+    public List<String> getDevices() {
+        return devices;
+    }
+
+    public void setDevices(List<String> devices) {
+        this.devices = devices;
+    }
 
     public Containers(Properties proper) {
         this.index = Integer.parseInt(proper.getProperty("device.info.container.index"));
@@ -45,123 +76,162 @@ public class Containers {
         this.storageUsed = Integer.parseInt(proper.getProperty("device.info.container.storageUsed"));
     }
 
+    public Containers(JSONObject containers) {
+        JSONObject params = containers.getJSONObject("params");
+        this.uuid = params.getString("containerUuid");
+        this.imageName = params.getString("imageName");
+        this.name = params.getString("containerName");
+        this.index = params.getInteger("containerIndex");
+        this.hyperv = params.getString("containerHyperv");
+        this.cpuCount = params.getShort("cpuCount");
+        this.cpuUsage = params.getString("cpuMask");
+        this.memoryTotal = params.getShort("memorySize");
+        JSONArray volumes = params.getJSONArray("volumes");
+        if (null != volumes && volumes.size() != 0) {
+            ContainersVolumes volume = null;
+            for (int i = 0, size = volumes.size(); i < size; i++) {
+                volume = new ContainersVolumes(volumes.getJSONObject(i));
+                this.volumes.add(volume);
+            }
+        }
+        devices = params.getJSONArray("devices").toJavaList(String.class);
+
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
     public void setIndex(int index) {
         this.index = index;
     }
-    public int getIndex() {
-        return index;
+
+    public String getHyperv() {
+        return hyperv;
     }
 
     public void setHyperv(String hyperv) {
         this.hyperv = hyperv;
     }
-    public String getHyperv() {
-        return hyperv;
+
+    public String getName() {
+        return name;
     }
 
     public void setName(String name) {
         this.name = name;
     }
-    public String getName() {
-        return name;
+
+    public String getUuid() {
+        return uuid;
     }
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
-    public String getUuid() {
-        return uuid;
+
+    public String getState() {
+        return state;
     }
 
     public void setState(String state) {
         this.state = state;
     }
-    public String getState() {
-        return state;
+
+    public String getUptime() {
+        return uptime;
     }
 
     public void setUptime(String uptime) {
         this.uptime = uptime;
     }
-    public String getUptime() {
-        return uptime;
+
+    public String getVersion() {
+        return version;
     }
 
     public void setVersion(String version) {
         this.version = version;
     }
-    public String getVersion() {
-        return version;
+
+    public String getArchitecture() {
+        return architecture;
     }
 
     public void setArchitecture(String architecture) {
         this.architecture = architecture;
     }
-    public String getArchitecture() {
-        return architecture;
+
+    public String getOsType() {
+        return osType;
     }
 
     public void setOsType(String osType) {
         this.osType = osType;
     }
-    public String getOsType() {
-        return osType;
+
+    public String getOsVersion() {
+        return osVersion;
     }
 
     public void setOsVersion(String osVersion) {
         this.osVersion = osVersion;
     }
-    public String getOsVersion() {
-        return osVersion;
+
+    public String getIp() {
+        return ip;
     }
 
     public void setIp(String ip) {
         this.ip = ip;
     }
-    public String getIp() {
-        return ip;
+
+    public int getCpuCount() {
+        return cpuCount;
     }
 
     public void setCpuCount(int cpuCount) {
         this.cpuCount = cpuCount;
     }
-    public int getCpuCount() {
-        return cpuCount;
+
+    public String getCpuUsage() {
+        return cpuUsage;
     }
 
     public void setCpuUsage(String cpuUsage) {
         this.cpuUsage = cpuUsage;
     }
-    public String getCpuUsage() {
-        return cpuUsage;
+
+    public int getMemoryTotal() {
+        return memoryTotal;
     }
 
     public void setMemoryTotal(int memoryTotal) {
         this.memoryTotal = memoryTotal;
     }
-    public int getMemoryTotal() {
-        return memoryTotal;
+
+    public int getMemoryUsed() {
+        return memoryUsed;
     }
 
     public void setMemoryUsed(int memoryUsed) {
         this.memoryUsed = memoryUsed;
     }
-    public int getMemoryUsed() {
-        return memoryUsed;
+
+    public int getStorageTotal() {
+        return storageTotal;
     }
 
     public void setStorageTotal(int storageTotal) {
         this.storageTotal = storageTotal;
     }
-    public int getStorageTotal() {
-        return storageTotal;
+
+    public int getStorageUsed() {
+        return storageUsed;
     }
 
     public void setStorageUsed(int storageUsed) {
         this.storageUsed = storageUsed;
-    }
-    public int getStorageUsed() {
-        return storageUsed;
     }
 
 }

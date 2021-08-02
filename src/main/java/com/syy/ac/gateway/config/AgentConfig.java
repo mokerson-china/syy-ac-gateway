@@ -1,5 +1,7 @@
 package com.syy.ac.gateway.config;
 
+import com.syy.ac.gateway.message.Containers;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -24,6 +26,8 @@ public class AgentConfig extends AgileControllerConfig {
     private String replaceVersion;
     private String replaceDeviceId;
     private List<String> customTopicList;
+    private List<Containers> containers;
+
     /**
      * 设备管理Topic配置
      */
@@ -71,6 +75,13 @@ public class AgentConfig extends AgileControllerConfig {
 
     }
 
+    public List<Containers> getContainers() {
+        return containers;
+    }
+
+    public void setContainers(List<Containers> containers) {
+        this.containers = containers;
+    }
 
     public List<String> getCustomTopicList() {
         return customTopicList;

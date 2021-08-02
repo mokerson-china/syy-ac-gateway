@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.syy.ac.gateway.IotAgent;
 import com.syy.ac.gateway.config.AgileControllerFileConfig;
+import com.syy.ac.gateway.message.Containers;
 import com.syy.ac.gateway.message.RegisterResultMessage;
 import com.syy.ac.gateway.util.HttpsFileUtil;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -12,6 +13,10 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -26,6 +31,84 @@ public class MqttReceiveCallback implements MqttCallback {
 
     public MqttReceiveCallback() {
         createMsg = new CreateMessage();
+    }
+
+    public static String uploadFile(String filePath, String url) throws Exception {
+        File file = new File(filePath);
+        if (!file.exists() || !file.isFile()) {
+            throw new IOException("文件不存在");
+        }
+        // String url = UPLOAD_URL.replace("ACCESS_TOKEN",
+        // accessToken).replace("TYPE",type);
+        URL urlObj = new URL(url);
+        // 连接
+        HttpURLConnection con = (HttpURLConnection) urlObj.openConnection();
+
+        con.setRequestMethod("POST");
+        con.setDoInput(true);
+        con.setDoOutput(true);
+        con.setUseCaches(false);
+
+        // 设置请求头信息
+        con.setRequestProperty("Connection", "Keep-Alive");
+        con.setRequestProperty("Charset", "UTF-8");
+
+        // 设置边界
+        String BOUNDARY = "----------" + System.currentTimeMillis();
+        con.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("--");
+        sb.append(BOUNDARY);
+        sb.append("\r\n");
+        sb.append("Content-Disposition: form-data;name=\"file\";filename=\"" + file.getName() + "\"\r\n");
+        sb.append("Content-Type:application/octet-stream\r\n\r\n");
+
+        byte[] head = sb.toString().getBytes(StandardCharsets.UTF_8);
+
+        // 获得输出流
+        OutputStream out = new DataOutputStream(con.getOutputStream());
+        // 输出表头
+        out.write(head);
+
+        // 文件正文部分
+        // 把文件已流文件的方式 推入到url中
+        DataInputStream in = new DataInputStream(new FileInputStream(file));
+        int bytes = 0;
+        byte[] bufferOut = new byte[1024];
+        while ((bytes = in.read(bufferOut)) != -1) {
+            out.write(bufferOut, 0, bytes);
+        }
+        in.close();
+
+        // 结尾部分
+        byte[] foot = ("\r\n--" + BOUNDARY + "--\r\n").getBytes(StandardCharsets.UTF_8);// 定义最后数据分隔线
+
+        out.write(foot);
+
+        out.flush();
+        out.close();
+
+        StringBuffer buffer = new StringBuffer();
+        BufferedReader reader = null;
+        String result = null;
+        try {
+            // 定义BufferedReader输入流来读取URL的响应
+            reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                buffer.append(line);
+            }
+            result = buffer.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -56,7 +139,6 @@ public class MqttReceiveCallback implements MqttCallback {
             if ("true".equals(params.getString("result"))) {
                 // 设备注册结果回复
                 MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
-
                 // 创建线程，持续保持设备上线
                 this.createTimerKeepAlive(IotAgent.config.getPubKeepaliveEventReply());
             } else {
@@ -66,77 +148,82 @@ public class MqttReceiveCallback implements MqttCallback {
             MyMqttClient.publishMessage(topic + "/reply", createMsg.getVirtualizationGetRep(messageId, method));
         } else if ("ContainerDownload".equals(method)) {
             logger.info("------------------------------------------------收到下发文件的内容：{}", message);
-            JSONArray files = messages.getJSONObject("params").getJSONArray("files");
 
             MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
+            this.fileDownload(messages);
+        } else if ("ContainerDownloadStatus".equals(method)) {
+            // 回复查询文件下载消息
+            JSONArray fileNames = messages.getJSONObject("params").getJSONArray("files");
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getDownloadStatus(fileNames, messageId, method));
+        } else if ("ContainerStorageMedia".equals(method)) {
+            if (topic.contains("virtualization/get")) {
+                // 查看容器可设置的工作目录
+                MyMqttClient.publishMessage(topic + "/reply", createMsg.getContainerStorageMedia(messageId, method));
+            }
+        } else if ("LogfileUpload".equals(method)) {
+            // 上传日志文件
+            logger.info("======================================\n\n\n");
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
+
+            JSONArray files = messages.getJSONObject("params").getJSONArray("files");
             for (int i = 0, j = files.size(); i < j; i++) {
                 JSONObject file = files.getJSONObject(i);
                 // 初始化文件下载对象
                 AgileControllerFileConfig fileConfig = new AgileControllerFileConfig(file);
                 String url = fileConfig.getTransferMode() + "://" + fileConfig.getFileServerAddress() + ":" +
-                        fileConfig.getFileServerPort() + fileConfig.getFileDirectory() + fileConfig.getName();
+                        fileConfig.getFileServerPort() + fileConfig.getFileDirectory();
                 try {
-                    logger.info("开始执行下载，下载地址：{}", url);
-                    HttpsFileUtil.download(url, null, IotAgent.config.getDownloadPath() + fileConfig.getName());
+                    logger.info("开始执行上传文件，上传地址：{}", url);
+                    uploadFile(url, "D:\\TEST\\IOTINFO_2.tar");
+                    logger.info("请求成功");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 logger.info("下载执行完成，下载地址为：");
             }
-        } else if ("ContainerDownloadStatus".equals(method)) {
-            // 回复查询文件下载消息
-            JSONArray fileNames = messages.getJSONObject("params").getJSONArray("files");
-            MyMqttClient.publishMessage(topic + "/reply", createMsg.getDownloadStatus(fileNames,method,messageId));
-        } else if("ContainerStorageMedia".equals(method)){
-            if(topic.contains("virtualization/get")){
-                // 查看容器可设置的工作目录
-                MyMqttClient.publishMessage(topic + "/reply", createMsg.getContainerStorageMedia(method,messageId));
-            }
-        }else if("LogfileUpload".equals(method)){
-            logger.info("======================================\n\n\n");
-        }else{
-            logger.error("--------------------------------暂未收录该方法，请和管理员联系--------------------------------");
+
+           /* String url = "https://172.18.2.116:1443/iotcenter/file-manager-service/v1/file/manager/upload";
+            Map<String, String> map = new HashMap<>(4);
+            File file = new File("D:\\TEST\\IOTINFO_2.tar");
+            map.put("fileFolder", String.valueOf(UUID.randomUUID()).replace("-", ""));
+            map.put("uploadType", "1");*/
+
+
+        } else if ("ContainerInstall".equals(method)) {
+            // 容器安装
+            IotAgent.config.getContainers().add(new Containers(messages));
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
+        } else if ("ShellScriptLoad".equals(method)) {
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
+            this.fileDownload(messages);
+        } else if ("ContainerStop".equals(method)) {
+            // 停止容器
+            String name = messages.getJSONObject("params").getString("containerName");
+            String containerHyperv = messages.getJSONObject("params").getString("containerHyperv");
+            IotAgent.config.getContainers().removeIf(containers -> name.equals(containers.getName()) && containerHyperv.equals(containers.getHyperv()));
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
+        } else if ("ContainerRestore".equals(method)) {
+            // 还原容器
+            MyMqttClient.publishMessage(topic + "/reply", createMsg.getMethodDeviceInfo(messageId, method));
+        } else {
+            logger.error("--------------------------------{}暂未收录该方法，请和管理员联系--------------------------------", method);
         }
-
-/*
-            if(1){
-                // 接收到下载文件请求，立即下载文件
-
-                String fileFolder = "84f1981fadcd4a3ca97bd6d472d020c9";
-                String fileName = "广东北向应用接入情况统计.txt";
-                String url = "https://"+IotAgent.config.getFileHost()+":"+IotAgent.config.getFilePort()+IotAgent.config.getDownloadURL()+"?fileFolder=%s&fileName=%s";
-                url = String.format(url, fileFolder, fileName);
-                logger.info("请求地址为{}", url);
-
-                Map<String, String> header = new HashMap<>(4);
-                header.put("X-HW-ID", IotAgent.config.getX_HW_ID());
-                header.put("X-HW-APPKEY", IotAgent.config.getX_HW_APPKEY());
-                logger.info("请求header参数：{}", header);
-                HttpsFileUtil.download(url,header,IotAgent.config.getDownloadPath()+fileName);
-                logger.info("请求成功");
-            }else if(topic.equals("...")){
-                logger.info("Client 接收消息主题: {}" , topic);
-                logger.info("Client 接收消息Qos: {}" , message.getQos());
-                logger.info("Client 接收消息内容: {}" , new String(message.getPayload()));
-            }*/
     }
-
 
     /**
      * 创建线程，持续维持网关在AC上的心跳
      *
-     * @param topic 心跳推送的Topic
      */
-    private void createTimerKeepAlive(String topic) {
+    private void createTimerKeepAlive(String messageId) {
         final long[] countKeep = {0};
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             public void run() {
                 countKeep[0]++;
-                MyMqttClient.publishMessage(topic, createMsg.getKeepAlive("KeepAlive"));
+                MyMqttClient.publishMessage(IotAgent.config.getPubKeepaliveEventReply(), createMsg.getKeepAlive(messageId, "KeepAlive"));
                 logger.info("成功发起第 {} 次心跳维持。。。。。。", countKeep[0]);
             }
-        }, 5000, 60000);
+        }, 0, 60000);
     }
 
     @Override
@@ -144,5 +231,21 @@ public class MqttReceiveCallback implements MqttCallback {
 
     }
 
-
+    private void fileDownload(JSONObject messages){
+        JSONArray files = messages.getJSONObject("params").getJSONArray("files");
+        for (int i = 0, j = files.size(); i < j; i++) {
+            JSONObject file = files.getJSONObject(i);
+            // 初始化文件下载对象
+            AgileControllerFileConfig fileConfig = new AgileControllerFileConfig(file);
+            String url = fileConfig.getTransferMode() + "://" + fileConfig.getFileServerAddress() + ":" +
+                    fileConfig.getFileServerPort() + fileConfig.getFileDirectory() + fileConfig.getName();
+            try {
+                logger.info("开始执行下载，下载地址：{}", url);
+                HttpsFileUtil.download(url, null, IotAgent.config.getDownloadPath() + fileConfig.getName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            logger.info("下载执行完成，下载地址为：");
+        }
+    }
 }
