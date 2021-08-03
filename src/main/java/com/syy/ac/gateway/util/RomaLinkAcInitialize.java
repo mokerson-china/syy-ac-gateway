@@ -25,56 +25,7 @@ public class RomaLinkAcInitialize {
         this.addRomaApp();
         // AC增加ROMA设备档案信息
         this.addRomaDevice();
-        // 注册设备
-        this.registerDeviceInfo();
         logger.info("ROMA对接AC初始化成功....");
-    }
-
-    /**
-     * 注册设备
-     */
-    private void registerDeviceInfo() {
-        List<String> topics = config.getCustomTopicList();
-        String registerTopic = null;
-        for (String topic : topics) {
-            if (topic.contains("event")) {
-                registerTopic = topic;
-                break;
-            }
-        }
-        if (registerTopic != null) {
-            registerTopic = registerTopic.replace("{DeviceId}", config.getGatewayId()).replace("{Version}", config.getTopicVersion()).replace("{Function}", "login");
-        } else {
-            throw new RuntimeException("未找到设备注册Topic，请检查Topic列表是否存在该Topic");
-        }
-        MyMqttClient.publishMessage(registerTopic, "{\n" +
-                "    \"devices\": [\n" +
-                "        {\n" +
-                "            \"deviceId\": \""+config.getClientId()+"\",\n" +
-                "            \"services\": [\n" +
-                "                {\n" +
-                "                    \"data\": {\n" +
-                "                        \"messageId\": \""+UUID.randomUUID()+"\",\n" +
-                "                        \"timestamp\": \""+new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date())+"\",\n" +
-                "                        \"deviceId\": \""+config.getDeviceEsn()+"\",\n" +
-                "                        \"type\": \"DeviceHello\",\n" +
-                "                        \"eventTime\": \""+new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date())+"\"\n" +
-                "                    },\n" +
-                "                    \"eventTime\": \"20191023T173625Z\",\n" +
-                "                    \"serviceId\": \"serviceName\"\n" +
-                "                }\n" +
-                "            ]\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}");
-
-/*                "{\n" +
-                "    \"messageId\": \"\",\n" +
-                "    \"timestamp\": \"" +  + "\",\n" +
-                "    \"deviceId\": \"" + config.getClientId() + "\",\n" +
-                "    \"type\": \"DeviceHello\",\n" +
-                "    \"eventTime\": \"" + new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(new Date()) + "\"\n" +
-                "}");*/
     }
 
 

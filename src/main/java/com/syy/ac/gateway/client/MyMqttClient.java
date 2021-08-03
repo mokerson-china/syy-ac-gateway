@@ -54,7 +54,7 @@ public class MyMqttClient {
                 }
             }
         }
-        MqttReceiveCallback.createTimerKeepAlive();
+        MqttReceiveCallback.registerDeviceInfo();
     }
 
     //	发布消息

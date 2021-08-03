@@ -15,6 +15,24 @@ public class AgileControllerFileConfig {
     private String authenticationMethod;
     private String caAuthenticationMethod;
     private String sliceEnable;
+    private String requestId;
+    private String compressMethod;
+
+    public String getCompressMethod() {
+        return compressMethod;
+    }
+
+    public void setCompressMethod(String compressMethod) {
+        this.compressMethod = compressMethod;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
     public AgileControllerFileConfig(JSONObject file) {
         name = file.getString("name");
@@ -29,6 +47,8 @@ public class AgileControllerFileConfig {
         authenticationMethod = file.getString("authenticationMethod");
         caAuthenticationMethod = file.getString("caAuthenticationMethod");
         sliceEnable = file.getString("sliceEnable");
+        requestId = file.getString("requestId");
+        compressMethod = file.getString("compressMethod");
     }
 
     public String getName() {

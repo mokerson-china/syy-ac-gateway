@@ -6,6 +6,7 @@ import com.syy.ac.gateway.IotAgent;
 import com.syy.ac.gateway.config.AgileControllerFileConfig;
 import com.syy.ac.gateway.message.Containers;
 import com.syy.ac.gateway.message.RegisterResultMessage;
+import com.syy.ac.gateway.util.HttpClientUtil;
 import com.syy.ac.gateway.util.HttpsFileUtil;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -17,10 +18,8 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * MQTT协议订阅Topic接受到消息处理
@@ -56,14 +55,12 @@ public class MqttReceiveCallback implements MqttCallback {
         String BOUNDARY = "----------" + System.currentTimeMillis();
         con.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("--");
-        sb.append(BOUNDARY);
-        sb.append("\r\n");
-        sb.append("Content-Disposition: form-data;name=\"file\";filename=\"" + file.getName() + "\"\r\n");
-        sb.append("Content-Type:application/octet-stream\r\n\r\n");
-
-        byte[] head = sb.toString().getBytes(StandardCharsets.UTF_8);
+        String sb = "--" +
+                BOUNDARY +
+                "\r\n" +
+                "Content-Disposition: form-data;name=\"file\";filename=\"" + file.getName() + "\"\r\n" +
+                "Content-Type:application/octet-stream\r\n\r\n";
+        byte[] head = sb.getBytes(StandardCharsets.UTF_8);
 
         // 获得输出流
         OutputStream out = new DataOutputStream(con.getOutputStream());
@@ -114,15 +111,12 @@ public class MqttReceiveCallback implements MqttCallback {
      * 创建线程，持续维持网关在AC上的心跳
      */
     public static void createTimerKeepAlive() {
-        final long[] countKeep = {0};
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             public void run() {
-                countKeep[0]++;
                 MyMqttClient.publishMessage(IotAgent.config.getPubKeepaliveEventReply(), createMsg.getKeepAlive(keepAliveMessageId, "KeepAlive"));
-                logger.info("成功发起第 {} 次心跳维持。。。。。。", countKeep[0]);
             }
-        }, 0, 120000);
+        }, 2000, 120000);
     }
 
     @Override
@@ -186,15 +180,16 @@ public class MqttReceiveCallback implements MqttCallback {
                 // 初始化文件下载对象
                 AgileControllerFileConfig fileConfig = new AgileControllerFileConfig(file);
                 String url = fileConfig.getTransferMode() + "://" + fileConfig.getFileServerAddress() + ":" +
-                        fileConfig.getFileServerPort() + fileConfig.getFileDirectory();
+                        fileConfig.getFileServerPort() + fileConfig.getFileDirectory() +IotAgent.config.getDeviceEsn()+"-"+
+                        fileConfig.getRequestId()+"."+fileConfig.getCompressMethod();
                 try {
                     logger.info("开始执行上传文件，上传地址：{}", url);
-                    uploadFile(url, "D:\\TEST\\test123.tar");
+                    HttpClientUtil.doPostFile(url,null,null,new File("D:/TEST/test123.tar"));
                     logger.info("请求成功");
                 } catch (Exception e) {
+                    logger.info("文件上传异常");
                     e.printStackTrace();
                 }
-                logger.info("下载执行完成，下载地址为：");
             }
 
            /* String url = "https://172.18.2.116:1443/iotcenter/file-manager-service/v1/file/manager/upload";
@@ -295,5 +290,15 @@ public class MqttReceiveCallback implements MqttCallback {
 
     private void startContainer() {
 
+    }
+
+    /**
+     * 注册设备
+     */
+    public static void registerDeviceInfo() {
+        String registerTopic;
+        registerTopic = IotAgent.config.getCustomTopicList("event","login");
+        MyMqttClient.publishMessage(registerTopic, createMsg.getKeepAlive(UUID.randomUUID().toString(),"DeviceHello"));
+        createTimerKeepAlive();
     }
 }
